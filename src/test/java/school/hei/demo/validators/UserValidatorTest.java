@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import school.hei.demo.domain.dto.request.UserCreate;
+import school.hei.demo.domain.dto.request.UserUpdate;
 import school.hei.demo.enums.UserRole;
 import school.hei.demo.exception.BadRequestException;
 
@@ -44,6 +45,30 @@ class UserValidatorTest {
     assertThrows(BadRequestException.class, () -> validator.validate(requestWithNullRole()));
     assertThrows(BadRequestException.class, () -> validator.validate(requestWithNullSpecialty()));
     assertThrows(BadRequestException.class, () -> validator.validate(requestWithNullEntryYear()));
+  }
+
+  @Test
+  void shouldAcceptValidUuid() {
+    assertDoesNotThrow(() -> validator.validateUuid(UUID.randomUUID().toString()));
+  }
+
+  @Test
+  void shouldRejectInvalidUuid() {
+    assertThrows(BadRequestException.class, () -> validator.validateUuid(null));
+    assertThrows(BadRequestException.class, () -> validator.validateUuid(" "));
+    assertThrows(BadRequestException.class, () -> validator.validateUuid("not-a-uuid"));
+  }
+
+  @Test
+  void shouldAcceptPartialUpdate() {
+    assertDoesNotThrow(() -> validator.validateUpdate(new UserUpdate(null, "John", null, null, null, null, null, null)));
+    assertDoesNotThrow(() -> validator.validateUpdate(new UserUpdate(null, null, null, null, null, null, null, null)));
+  }
+
+  @Test
+  void shouldRejectInvalidPartialUpdate() {
+    assertThrows(BadRequestException.class, () -> validator.validateUpdate(null));
+    assertThrows(BadRequestException.class, () -> validator.validateUpdate(new UserUpdate(" ", null, null, null, null, null, null, null)));
   }
 
   private UserCreate validRequest() {

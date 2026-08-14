@@ -12,13 +12,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import school.hei.demo.conf.FacadeIT;
+import school.hei.demo.domain.dto.request.UserUpdate;
 import school.hei.demo.enums.UserRole;
 import school.hei.demo.repository.UserRepository;
 import school.hei.demo.repository.entity.JUser;
+import school.hei.demo.service.UserService;
 
 class UserRepositoryIT extends FacadeIT {
   @Autowired UserRepository userRepository;
   @Autowired JdbcTemplate jdbcTemplate;
+  @Autowired UserService userService;
 
   @BeforeEach
   void cleanUsers() {
@@ -78,6 +81,23 @@ class UserRepositoryIT extends FacadeIT {
     assertEquals(3, result.getTotalElements());
     assertEquals(1, result.getNumber());
     assertEquals(1, result.getNumberOfElements());
+  }
+
+  @Test
+  void shouldFindUpdateAndDeleteUser() {
+    UUID specialtyId =
+        jdbcTemplate.queryForObject("select id from specialty where code = 'NONE'", UUID.class);
+    JUser saved = userRepository.saveAndFlush(
+        user("REF001", "John", "Doe", "john@example.com", UserRole.STUDENT, specialtyId));
+
+    assertEquals(saved.getId(), userService.findById(saved.getId().toString()).getId());
+
+    userService.update(
+        saved.getId().toString(), new UserUpdate(null, "Updated", null, null, null, null, null, null));
+    assertEquals("Updated", userRepository.findById(saved.getId()).orElseThrow().getFirstName());
+
+    userService.delete(saved.getId().toString());
+    assertTrue(userRepository.findById(saved.getId()).isEmpty());
   }
 
   private JUser user(

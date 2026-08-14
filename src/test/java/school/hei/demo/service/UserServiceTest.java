@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,10 +23,12 @@ import org.springframework.data.domain.PageRequest;
 import school.hei.demo.domain.dto.response.UserPage;
 import school.hei.demo.exception.BadRequestException;
 import school.hei.demo.domain.dto.request.UserCreate;
+import school.hei.demo.domain.dto.request.UserUpdate;
 import school.hei.demo.domain.dto.response.User;
 import school.hei.demo.domain.mappers.UserMapper;
 import school.hei.demo.enums.UserRole;
 import school.hei.demo.exception.ConflictException;
+import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.UserRepository;
 import school.hei.demo.repository.entity.JUser;
 import school.hei.demo.validators.UserValidator;
@@ -122,5 +125,106 @@ class UserServiceTest {
     assertThrows(
         BadRequestException.class,
         () -> userService.findAll(-1, 20, null, null, null, null, null));
+  }
+
+  @Test
+  void shouldFindUserByStringUuid() {
+    UUID id = UUID.randomUUID();
+    JUser jUser = existingUser(id);
+    school.hei.demo.domain.entity.User domainUser = domainUser(id);
+    when(userValidator.validateUuid(id.toString())).thenReturn(id);
+    when(userRepository.findById(id)).thenReturn(Optional.of(jUser));
+    when(userMapper.toDomain(jUser)).thenReturn(domainUser);
+
+    User result = userService.findById(id.toString());
+
+    assertEquals(id, result.getId());
+    assertEquals(jUser.getEmail(), result.getEmail());
+  }
+
+  @Test
+  void shouldRejectUnknownUserWhenFindingById() {
+    UUID id = UUID.randomUUID();
+    when(userValidator.validateUuid(id.toString())).thenReturn(id);
+    when(userRepository.findById(id)).thenReturn(Optional.empty());
+
+    assertThrows(NotFoundException.class, () -> userService.findById(id.toString()));
+  }
+
+  @Test
+  void shouldUpdateOnlyProvidedFieldsAndHashPassword() {
+    UUID id = UUID.randomUUID();
+    JUser jUser = existingUser(id);
+    UserUpdate request = new UserUpdate(null, "Updated", null, null, "new-password", null, null, null);
+    when(userValidator.validateUuid(id.toString())).thenReturn(id);
+    when(userRepository.findById(id)).thenReturn(Optional.of(jUser));
+    when(passwordEncoder.encode("new-password")).thenReturn("new-hash");
+    when(userRepository.save(jUser)).thenReturn(jUser);
+    when(userMapper.toDomain(jUser)).thenReturn(domainUser(id));
+
+    User result = userService.update(id.toString(), request);
+
+    assertEquals("Updated", jUser.getFirstName());
+    assertEquals("Doe", jUser.getLastName());
+    assertEquals("new-hash", jUser.getPassword());
+    assertEquals(id, result.getId());
+  }
+
+  @Test
+  void shouldRejectDuplicateValuesDuringUpdate() {
+    UUID id = UUID.randomUUID();
+    JUser jUser = existingUser(id);
+    when(userValidator.validateUuid(id.toString())).thenReturn(id);
+    when(userRepository.findById(id)).thenReturn(Optional.of(jUser));
+    when(userRepository.existsByReferenceAndIdNot("OTHER", id)).thenReturn(true);
+
+    assertThrows(
+        ConflictException.class,
+        () -> userService.update(id.toString(), new UserUpdate("OTHER", null, null, null, null, null, null, null)));
+  }
+
+  @Test
+  void shouldAllowEmptyUpdateAndDeleteExistingUser() {
+    UUID id = UUID.randomUUID();
+    JUser jUser = existingUser(id);
+    when(userValidator.validateUuid(id.toString())).thenReturn(id);
+    when(userRepository.findById(id)).thenReturn(Optional.of(jUser));
+    when(userRepository.save(jUser)).thenReturn(jUser);
+    when(userMapper.toDomain(jUser)).thenReturn(domainUser(id));
+
+    userService.update(id.toString(), new UserUpdate(null, null, null, null, null, null, null, null));
+    userService.delete(id.toString());
+
+    verify(userRepository).save(jUser);
+    verify(userRepository).delete(jUser);
+  }
+
+  @Test
+  void shouldRejectUnknownUserWhenDeleting() {
+    UUID id = UUID.randomUUID();
+    when(userValidator.validateUuid(id.toString())).thenReturn(id);
+    when(userRepository.findById(id)).thenReturn(Optional.empty());
+
+    assertThrows(NotFoundException.class, () -> userService.delete(id.toString()));
+  }
+
+  private JUser existingUser(UUID id) {
+    JUser user = new JUser();
+    user.setId(id);
+    user.setReference("REF001");
+    user.setFirstName("John");
+    user.setLastName("Doe");
+    user.setEmail("john@example.com");
+    user.setPassword("hash");
+    user.setUserRole(UserRole.STUDENT);
+    user.setSpecialtyId(request.specialtyId());
+    user.setEntryYear(2025);
+    return user;
+  }
+
+  private school.hei.demo.domain.entity.User domainUser(UUID id) {
+    return new school.hei.demo.domain.entity.User(
+        id, "REF001", "John", "Doe", "john@example.com", "hash", UserRole.STUDENT,
+        request.specialtyId(), 2025, null);
   }
 }

@@ -4,6 +4,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -18,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import school.hei.demo.domain.dto.request.UserCreate;
+import school.hei.demo.domain.dto.request.UserUpdate;
 import school.hei.demo.domain.dto.response.User;
 import school.hei.demo.domain.dto.response.PageMetadata;
 import school.hei.demo.domain.dto.response.UserPage;
@@ -26,6 +30,7 @@ import school.hei.demo.enums.UserRole;
 import school.hei.demo.exception.BadRequestException;
 import school.hei.demo.exception.ConflictException;
 import school.hei.demo.exception.GlobalExceptionHandler;
+import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
@@ -133,6 +138,74 @@ class UserControllerTest {
         .perform(post("/users").contentType("application/json").content("{"))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.status").value(400));
+  }
+
+  @Test
+  void shouldFindUserById() throws Exception {
+    String id = UUID.randomUUID().toString();
+    when(userService.findById(id)).thenReturn(responseUser());
+
+    mockMvc
+        .perform(get("/users/{userId}", id))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.email").value("john@example.com"));
+  }
+
+  @Test
+  void shouldReturnNotFoundForUnknownUser() throws Exception {
+    String id = UUID.randomUUID().toString();
+    when(userService.findById(id)).thenThrow(new NotFoundException("User not found: " + id));
+
+    mockMvc
+        .perform(get("/users/{userId}", id))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.status").value(404));
+  }
+
+  @Test
+  void shouldRejectInvalidUserId() throws Exception {
+    doThrow(new BadRequestException("User id must be a valid UUID"))
+        .when(userService)
+        .findById("invalid");
+
+    mockMvc
+        .perform(get("/users/{userId}", "invalid"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400));
+  }
+
+  @Test
+  void shouldPatchUser() throws Exception {
+    String id = UUID.randomUUID().toString();
+    UserUpdate request = new UserUpdate(null, "Updated", null, null, null, null, null, null);
+    when(userService.update(id, request)).thenReturn(responseUser());
+
+    mockMvc
+        .perform(
+            patch("/users/{userId}", id)
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void shouldReturnBadRequestForNullPatchBody() throws Exception {
+    String id = UUID.randomUUID().toString();
+    doThrow(new BadRequestException("Request body is required"))
+        .when(userService)
+        .update(id, null);
+
+    mockMvc
+        .perform(patch("/users/{userId}", id).contentType("application/json").content("null"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400));
+  }
+
+  @Test
+  void shouldDeleteUser() throws Exception {
+    String id = UUID.randomUUID().toString();
+
+    mockMvc.perform(delete("/users/{userId}", id)).andExpect(status().isNoContent()).andExpect(content().string(""));
   }
 
   private UserCreate request() {
