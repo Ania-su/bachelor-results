@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import school.hei.demo.enums.CodeType;
 import school.hei.demo.enums.UserRole;
 
 @Getter
@@ -20,7 +19,7 @@ public class User {
   private String lastName;
   private String email;
   private UserRole userRole;
-  private CodeType specialtyCodeType;
+  private UUID specialtyId;
   private Integer entryYear;
   private Instant createdAt;
 }

@@ -35,7 +35,7 @@ public class UserService {
             request.email(),
             passwordEncoder.encode(request.password()),
             request.userRole(),
-            request.specialtyCodeType(),
+            request.specialtyId(),
             request.entryYear(),
             null);
 
@@ -49,7 +49,7 @@ public class UserService {
         savedDomainUser.getLastName(),
         savedDomainUser.getEmail(),
         savedDomainUser.getUserRole(),
-        savedDomainUser.getSpecialtyCodeType(),
+        savedDomainUser.getSpecialtyId(),
         savedDomainUser.getEntryYear(),
         savedDomainUser.getCreatedAt());
   }

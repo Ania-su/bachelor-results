@@ -1,6 +1,6 @@
 package school.hei.demo.domain.dto.request;
 
-import school.hei.demo.enums.CodeType;
+import java.util.UUID;
 import school.hei.demo.enums.UserRole;
 
 public record UserCreate(
@@ -10,5 +10,5 @@ public record UserCreate(
     String email,
     String password,
     UserRole userRole,
-    CodeType specialtyCodeType,
+    UUID specialtyId,
     Integer entryYear) {}

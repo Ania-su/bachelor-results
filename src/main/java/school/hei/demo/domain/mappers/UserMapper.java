@@ -19,7 +19,7 @@ public class UserMapper {
         jUser.getEmail(),
         jUser.getPassword(),
         jUser.getUserRole(),
-        jUser.getSpecialtyCodeType(),
+        jUser.getSpecialtyId(),
         jUser.getEntryYear(),
         jUser.getCreatedAt());
   }
@@ -37,7 +37,7 @@ public class UserMapper {
     jUser.setEmail(user.getEmail());
     jUser.setPassword(user.getPassword());
     jUser.setUserRole(user.getUserRole());
-    jUser.setSpecialtyCodeType(user.getSpecialtyCodeType());
+    jUser.setSpecialtyId(user.getSpecialtyId());
     jUser.setEntryYear(user.getEntryYear());
     jUser.setCreatedAt(user.getCreatedAt());
     return jUser;

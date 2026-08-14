@@ -14,7 +14,8 @@ import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import school.hei.demo.enums.CodeType;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import school.hei.demo.enums.UserRole;
 
 @Entity
@@ -25,35 +26,36 @@ import school.hei.demo.enums.UserRole;
 public class JUser {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
+  @Column(name = "id", nullable = false)
   private UUID id;
 
-  @Column(nullable = false, length = 8)
+  @Column(nullable = false, unique = true, length = 8)
   private String reference;
 
-  @Column(nullable = false, length = 255)
+  @Column(name = "first_name", nullable = false, length = 255)
   private String firstName;
 
-  @Column(nullable = false, length = 255)
+  @Column(name = "last_name", nullable = false, length = 255)
   private String lastName;
 
   @Column(nullable = false, unique = true, length = 255)
   private String email;
 
-  @Column(nullable = false)
+  @Column(name = "password_hash", nullable = false, length = 255)
   private String password;
 
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
+  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+  @Column(name = "user_role", nullable = false, columnDefinition = "user_role")
   private UserRole userRole;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
-  private CodeType specialtyCodeType;
+  @Column(name = "id_specialty", nullable = false)
+  private UUID specialtyId;
 
-  @Column(nullable = false)
+  @Column(name = "entry_year")
   private Integer entryYear;
 
-  @Column(nullable = false, updatable = false)
+  @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
 
   @PrePersist

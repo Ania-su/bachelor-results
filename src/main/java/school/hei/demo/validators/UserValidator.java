@@ -16,8 +16,8 @@ public class UserValidator {
     if (request.userRole() == null) {
       invalid("userRole is required");
     }
-    if (request.specialtyCodeType() == null) {
-      invalid("specialtyCodeType is required");
+    if (request.specialtyId() == null) {
+      invalid("specialtyId is required");
     }
     if (request.entryYear() == null) {
       invalid("entryYear is required");
