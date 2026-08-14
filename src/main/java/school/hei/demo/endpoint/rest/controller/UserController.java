@@ -1,4 +1,4 @@
-package school.hei.demo.endpoint.rest.controller.user;
+package school.hei.demo.endpoint.rest.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
