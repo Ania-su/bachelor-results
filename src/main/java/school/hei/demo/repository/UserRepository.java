@@ -14,7 +14,11 @@ import school.hei.demo.repository.entity.JUser;
 public interface UserRepository extends JpaRepository<JUser, UUID> {
   boolean existsByReference(String reference);
 
+  boolean existsByReferenceAndIdNot(String reference, UUID id);
+
   boolean existsByEmailIgnoreCase(String email);
+
+  boolean existsByEmailIgnoreCaseAndIdNot(String email, UUID id);
 
   @Query(
       """
