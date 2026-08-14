@@ -3,6 +3,7 @@ package school.hei.demo.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -18,6 +19,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import school.hei.demo.domain.dto.request.UserCreate;
 import school.hei.demo.domain.dto.response.User;
+import school.hei.demo.domain.dto.response.PageMetadata;
+import school.hei.demo.domain.dto.response.UserPage;
 import school.hei.demo.endpoint.rest.controller.UserController;
 import school.hei.demo.enums.UserRole;
 import school.hei.demo.exception.BadRequestException;
@@ -54,6 +57,48 @@ class UserControllerTest {
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.email").value(request.email()))
         .andExpect(jsonPath("$.password").doesNotExist());
+  }
+
+  @Test
+  void shouldFindUsersWithDefaultParameters() throws Exception {
+    when(userService.findAll(0, 20, null, null, null, null, null))
+        .thenReturn(new UserPage(java.util.List.of(responseUser()), new PageMetadata(0, 20, 1, 1)));
+
+    mockMvc
+        .perform(get("/users"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andExpect(jsonPath("$.page.pageSize").value(20));
+  }
+
+  @Test
+  void shouldPassUserFiltersToService() throws Exception {
+    when(userService.findAll(2, 5, UserRole.TEACHER, "ref", "john", "doe", "example"))
+        .thenReturn(new UserPage(java.util.List.of(), new PageMetadata(2, 5, 0, 0)));
+
+    mockMvc
+        .perform(
+            get("/users")
+                .param("page", "2")
+                .param("pageSize", "5")
+                .param("role", "TEACHER")
+                .param("reference", "ref")
+                .param("firstName", "john")
+                .param("lastName", "doe")
+                .param("email", "example"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.page.page").value(2));
+  }
+
+  @Test
+  void shouldReturnBadRequestForInvalidPage() throws Exception {
+    when(userService.findAll(-1, 20, null, null, null, null, null))
+        .thenThrow(new BadRequestException("page must be greater than or equal to 0"));
+
+    mockMvc
+        .perform(get("/users").param("page", "-1"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400));
   }
 
   @Test
