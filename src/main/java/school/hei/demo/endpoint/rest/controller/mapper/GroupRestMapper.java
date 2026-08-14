@@ -8,19 +8,19 @@ import school.hei.demo.entity.Group;
 @Component
 public class GroupRestMapper {
 
-    public GroupResponse toResponse(Group group) {
-        if (group == null) return null;
-        return GroupResponse.builder()
-                .id(group.getId())
-                .reference(group.getReference())
-                .academicYear(group.getAcademicYear())
-                .build();
-    }
+  public GroupResponse toResponse(Group group) {
+    if (group == null) return null;
+    return GroupResponse.builder()
+        .id(group.getId())
+        .reference(group.getReference())
+        .academicYear(group.getAcademicYear())
+        .build();
+  }
 
-    public Group toDomain(GroupRequest request) {
-        return Group.builder()
-                .reference(request.getReference())
-                .academicYear(request.getAcademicYear())
-                .build();
-    }
+  public Group toDomain(GroupRequest request) {
+    return Group.builder()
+        .reference(request.getReference())
+        .academicYear(request.getAcademicYear())
+        .build();
+  }
 }

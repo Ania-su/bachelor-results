@@ -1,7 +1,7 @@
 package school.hei.demo.domain.dto.response;
 
-import lombok.*;
 import java.util.UUID;
+import lombok.*;
 
 @Getter
 @Setter
@@ -9,7 +9,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class GroupResponse {
-    private UUID id;
-    private String reference;
-    private Integer academicYear;
+  private UUID id;
+  private String reference;
+  private Integer academicYear;
 }

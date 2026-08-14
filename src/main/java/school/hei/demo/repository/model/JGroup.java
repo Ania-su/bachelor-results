@@ -23,14 +23,11 @@ import lombok.Setter;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class JGroup {
 
-    @Id
-    @GeneratedValue
-    @EqualsAndHashCode.Include
-    private UUID id;
+  @Id @GeneratedValue @EqualsAndHashCode.Include private UUID id;
 
-    @Column(nullable = false, length = 2)
-    private String reference;
+  @Column(nullable = false, length = 2)
+  private String reference;
 
-    @Column(name = "academic_year", nullable = false)
-    private Integer academicYear;
+  @Column(name = "academic_year", nullable = false)
+  private Integer academicYear;
 }

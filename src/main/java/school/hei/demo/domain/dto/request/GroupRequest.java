@@ -8,6 +8,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class GroupRequest {
-    private String reference;
-    private Integer academicYear;
+  private String reference;
+  private Integer academicYear;
 }

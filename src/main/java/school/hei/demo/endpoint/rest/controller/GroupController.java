@@ -17,49 +17,48 @@ import school.hei.demo.service.GroupService;
 @AllArgsConstructor
 public class GroupController {
 
-    private final GroupService service;
-    private final GroupRestMapper mapper;
+  private final GroupService service;
+  private final GroupRestMapper mapper;
 
-    @GetMapping
-    public ResponseEntity<List<GroupResponse>> listGroups(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int pageSize,
-            @RequestParam(required = false) Integer academicYear) {
+  @GetMapping
+  public ResponseEntity<List<GroupResponse>> listGroups(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "20") int pageSize,
+      @RequestParam(required = false) Integer academicYear) {
 
-        var result = service.list(academicYear, page, pageSize);
-        var body = result.getContent().stream().map(mapper::toResponse).toList();
+    var result = service.list(academicYear, page, pageSize);
+    var body = result.getContent().stream().map(mapper::toResponse).toList();
 
-        var headers = new HttpHeaders();
-        headers.add("X-Page", String.valueOf(page));
-        headers.add("X-Page-Size", String.valueOf(pageSize));
-        headers.add("X-Total-Elements", String.valueOf(result.getTotalElements()));
-        headers.add("X-Total-Pages", String.valueOf(result.getTotalPages()));
+    var headers = new HttpHeaders();
+    headers.add("X-Page", String.valueOf(page));
+    headers.add("X-Page-Size", String.valueOf(pageSize));
+    headers.add("X-Total-Elements", String.valueOf(result.getTotalElements()));
+    headers.add("X-Total-Pages", String.valueOf(result.getTotalPages()));
 
-        return ResponseEntity.ok().headers(headers).body(body);
-    }
+    return ResponseEntity.ok().headers(headers).body(body);
+  }
 
-    @GetMapping("/{groupId}")
-    public ResponseEntity<GroupResponse> getGroup(@PathVariable UUID groupId) {
-        return ResponseEntity.ok(mapper.toResponse(service.get(groupId)));
-    }
+  @GetMapping("/{groupId}")
+  public ResponseEntity<GroupResponse> getGroup(@PathVariable UUID groupId) {
+    return ResponseEntity.ok(mapper.toResponse(service.get(groupId)));
+  }
 
-    @PostMapping
-    public ResponseEntity<GroupResponse> createGroup(@RequestBody GroupRequest request) {
-        var created = mapper.toResponse(service.create(mapper.toDomain(request)));
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
+  @PostMapping
+  public ResponseEntity<GroupResponse> createGroup(@RequestBody GroupRequest request) {
+    var created = mapper.toResponse(service.create(mapper.toDomain(request)));
+    return ResponseEntity.status(HttpStatus.CREATED).body(created);
+  }
 
-    @PatchMapping("/{groupId}")
-    public ResponseEntity<GroupResponse> updateGroup(
-            @PathVariable UUID groupId,
-            @RequestBody GroupRequest request) {
-        var updated = mapper.toResponse(service.update(groupId, mapper.toDomain(request)));
-        return ResponseEntity.ok(updated);
-    }
+  @PatchMapping("/{groupId}")
+  public ResponseEntity<GroupResponse> updateGroup(
+      @PathVariable UUID groupId, @RequestBody GroupRequest request) {
+    var updated = mapper.toResponse(service.update(groupId, mapper.toDomain(request)));
+    return ResponseEntity.ok(updated);
+  }
 
-    @DeleteMapping("/{groupId}")
-    public ResponseEntity<Void> deleteGroup(@PathVariable UUID groupId) {
-        service.delete(groupId);
-        return ResponseEntity.noContent().build();
-    }
+  @DeleteMapping("/{groupId}")
+  public ResponseEntity<Void> deleteGroup(@PathVariable UUID groupId) {
+    service.delete(groupId);
+    return ResponseEntity.noContent().build();
+  }
 }

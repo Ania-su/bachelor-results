@@ -10,11 +10,10 @@ import school.hei.demo.repository.model.JGroup;
 
 public interface GroupRepository extends JpaRepository<JGroup, UUID> {
 
-    @Query("""
+  @Query(
+      """
       SELECT g FROM JGroup g
       WHERE (:academicYear IS NULL OR g.academicYear = :academicYear)
       """)
-    Page<JGroup> findAllFiltered(
-            @Param("academicYear") Integer academicYear,
-            Pageable pageable);
+  Page<JGroup> findAllFiltered(@Param("academicYear") Integer academicYear, Pageable pageable);
 }
