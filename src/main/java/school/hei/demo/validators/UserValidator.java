@@ -7,6 +7,10 @@ import school.hei.demo.exception.BadRequestException;
 @Component
 public class UserValidator {
   public void validate(UserCreate request) {
+    if (request == null) {
+      invalid("Request body is required");
+    }
+
     requireText(request.reference(), "reference");
     requireText(request.firstName(), "firstName");
     requireText(request.lastName(), "lastName");

@@ -6,5 +6,7 @@ import school.hei.demo.repository.entity.JUser;
 
 @Repository
 public interface UserRepository extends JpaRepository<JUser, java.util.UUID> {
+  boolean existsByReference(String reference);
+
   boolean existsByEmailIgnoreCase(String email);
 }

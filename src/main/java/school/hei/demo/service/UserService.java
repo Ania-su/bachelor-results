@@ -22,6 +22,9 @@ public class UserService {
   public User create(UserCreate request) {
     userValidator.validate(request);
 
+    if (userRepository.existsByReference(request.reference())) {
+      throw new ConflictException("A user with this reference already exists");
+    }
     if (userRepository.existsByEmailIgnoreCase(request.email())) {
       throw new ConflictException("A user with this email already exists");
     }
