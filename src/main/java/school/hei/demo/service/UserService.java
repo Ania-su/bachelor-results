@@ -58,8 +58,13 @@ public class UserService {
   }
 
   public UserPage findAll(
-      int page, int pageSize, UserRole role, String reference,
-      String firstName, String lastName, String email) {
+      int page,
+      int pageSize,
+      UserRole role,
+      String reference,
+      String firstName,
+      String lastName,
+      String email) {
     userValidator.validatePagination(page, pageSize);
     Pageable pageable = PageRequest.of(page, pageSize);
     Page<JUser> users =
@@ -90,11 +95,13 @@ public class UserService {
     UUID uuid = userValidator.validateUuid(userId);
     JUser user = findJpaUser(uuid);
 
-    if (request.reference() != null && !request.reference().equals(user.getReference())
+    if (request.reference() != null
+        && !request.reference().equals(user.getReference())
         && userRepository.existsByReferenceAndIdNot(request.reference(), uuid)) {
       throw new ConflictException("A user with this reference already exists");
     }
-    if (request.email() != null && !request.email().equalsIgnoreCase(user.getEmail())
+    if (request.email() != null
+        && !request.email().equalsIgnoreCase(user.getEmail())
         && userRepository.existsByEmailIgnoreCaseAndIdNot(request.email(), uuid)) {
       throw new ConflictException("A user with this email already exists");
     }

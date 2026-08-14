@@ -18,10 +18,18 @@ class GlobalExceptionHandlerTest {
 
   @Test
   void shouldHandleKnownExceptions() {
-    assertEquals(HttpStatus.BAD_REQUEST.value(), body(handler.handleBadRequestException(new BadRequestException("bad"))).status());
-    assertEquals(HttpStatus.CONFLICT.value(), body(handler.handleConflictException(new ConflictException("conflict"))).status());
-    assertEquals(HttpStatus.NOT_FOUND.value(), body(handler.handleNotFound(new NotFoundException("not found"))).status());
-    assertEquals(HttpStatus.FORBIDDEN.value(), body(handler.handleForbiddenException(new ForbiddenException("forbidden"))).status());
+    assertEquals(
+        HttpStatus.BAD_REQUEST.value(),
+        body(handler.handleBadRequestException(new BadRequestException("bad"))).status());
+    assertEquals(
+        HttpStatus.CONFLICT.value(),
+        body(handler.handleConflictException(new ConflictException("conflict"))).status());
+    assertEquals(
+        HttpStatus.NOT_FOUND.value(),
+        body(handler.handleNotFound(new NotFoundException("not found"))).status());
+    assertEquals(
+        HttpStatus.FORBIDDEN.value(),
+        body(handler.handleForbiddenException(new ForbiddenException("forbidden"))).status());
   }
 
   @Test

@@ -61,46 +61,131 @@ class UserValidatorTest {
 
   @Test
   void shouldAcceptPartialUpdate() {
-    assertDoesNotThrow(() -> validator.validateUpdate(new UserUpdate(null, "John", null, null, null, null, null, null)));
-    assertDoesNotThrow(() -> validator.validateUpdate(new UserUpdate(null, null, null, null, null, null, null, null)));
+    assertDoesNotThrow(
+        () ->
+            validator.validateUpdate(
+                new UserUpdate(null, "John", null, null, null, null, null, null)));
+    assertDoesNotThrow(
+        () ->
+            validator.validateUpdate(
+                new UserUpdate(null, null, null, null, null, null, null, null)));
   }
 
   @Test
   void shouldRejectInvalidPartialUpdate() {
     assertThrows(BadRequestException.class, () -> validator.validateUpdate(null));
-    assertThrows(BadRequestException.class, () -> validator.validateUpdate(new UserUpdate(" ", null, null, null, null, null, null, null)));
+    assertThrows(
+        BadRequestException.class,
+        () ->
+            validator.validateUpdate(
+                new UserUpdate(" ", null, null, null, null, null, null, null)));
   }
 
   private UserCreate validRequest() {
     return new UserCreate(
-        "REF001", "John", "Doe", "john@example.com", "password", UserRole.STUDENT,
-        UUID.randomUUID(), 2025);
+        "REF001",
+        "John",
+        "Doe",
+        "john@example.com",
+        "password",
+        UserRole.STUDENT,
+        UUID.randomUUID(),
+        2025);
   }
 
   private UserCreate validRequestWith(String field, String value) {
     UserCreate request = validRequest();
     return switch (field) {
-      case "reference" -> new UserCreate(value, request.firstName(), request.lastName(), request.email(), request.password(), request.userRole(), request.specialtyId(), request.entryYear());
-      case "firstName" -> new UserCreate(request.reference(), value, request.lastName(), request.email(), request.password(), request.userRole(), request.specialtyId(), request.entryYear());
-      case "lastName" -> new UserCreate(request.reference(), request.firstName(), value, request.email(), request.password(), request.userRole(), request.specialtyId(), request.entryYear());
-      case "email" -> new UserCreate(request.reference(), request.firstName(), request.lastName(), value, request.password(), request.userRole(), request.specialtyId(), request.entryYear());
-      case "password" -> new UserCreate(request.reference(), request.firstName(), request.lastName(), request.email(), value, request.userRole(), request.specialtyId(), request.entryYear());
+      case "reference" ->
+          new UserCreate(
+              value,
+              request.firstName(),
+              request.lastName(),
+              request.email(),
+              request.password(),
+              request.userRole(),
+              request.specialtyId(),
+              request.entryYear());
+      case "firstName" ->
+          new UserCreate(
+              request.reference(),
+              value,
+              request.lastName(),
+              request.email(),
+              request.password(),
+              request.userRole(),
+              request.specialtyId(),
+              request.entryYear());
+      case "lastName" ->
+          new UserCreate(
+              request.reference(),
+              request.firstName(),
+              value,
+              request.email(),
+              request.password(),
+              request.userRole(),
+              request.specialtyId(),
+              request.entryYear());
+      case "email" ->
+          new UserCreate(
+              request.reference(),
+              request.firstName(),
+              request.lastName(),
+              value,
+              request.password(),
+              request.userRole(),
+              request.specialtyId(),
+              request.entryYear());
+      case "password" ->
+          new UserCreate(
+              request.reference(),
+              request.firstName(),
+              request.lastName(),
+              request.email(),
+              value,
+              request.userRole(),
+              request.specialtyId(),
+              request.entryYear());
       default -> throw new IllegalArgumentException(field);
     };
   }
 
   private UserCreate requestWithNullRole() {
     UserCreate request = validRequest();
-    return new UserCreate(request.reference(), request.firstName(), request.lastName(), request.email(), request.password(), null, request.specialtyId(), request.entryYear());
+    return new UserCreate(
+        request.reference(),
+        request.firstName(),
+        request.lastName(),
+        request.email(),
+        request.password(),
+        null,
+        request.specialtyId(),
+        request.entryYear());
   }
 
   private UserCreate requestWithNullSpecialty() {
     UserCreate request = validRequest();
-    return new UserCreate(request.reference(), request.firstName(), request.lastName(), request.email(), request.password(), request.userRole(), null, request.entryYear());
+    return new UserCreate(
+        request.reference(),
+        request.firstName(),
+        request.lastName(),
+        request.email(),
+        request.password(),
+        request.userRole(),
+        null,
+        request.entryYear());
   }
 
   private UserCreate requestWithNullEntryYear() {
     UserCreate request = validRequest();
-    return new UserCreate(request.reference(), request.firstName(), request.lastName(), request.email(), request.password(), request.userRole(), request.specialtyId(), null);
+    return new UserCreate(
+        request.reference(),
+        request.firstName(),
+        request.lastName(),
+        request.email(),
+        request.password(),
+        request.userRole(),
+        request.specialtyId(),
+        null);
   }
 }

@@ -8,25 +8,25 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import school.hei.demo.domain.dto.response.UserPage;
-import school.hei.demo.exception.BadRequestException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import school.hei.demo.domain.dto.request.UserCreate;
 import school.hei.demo.domain.dto.request.UserUpdate;
 import school.hei.demo.domain.dto.response.User;
+import school.hei.demo.domain.dto.response.UserPage;
 import school.hei.demo.domain.mappers.UserMapper;
 import school.hei.demo.enums.UserRole;
+import school.hei.demo.exception.BadRequestException;
 import school.hei.demo.exception.ConflictException;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.UserRepository;
@@ -45,7 +45,16 @@ class UserServiceTest {
 
   @BeforeEach
   void setUp() {
-    request = new UserCreate("REF001", "John", "Doe", "john@example.com", "password", UserRole.STUDENT, UUID.randomUUID(), 2025);
+    request =
+        new UserCreate(
+            "REF001",
+            "John",
+            "Doe",
+            "john@example.com",
+            "password",
+            UserRole.STUDENT,
+            UUID.randomUUID(),
+            2025);
   }
 
   @Test
@@ -53,9 +62,16 @@ class UserServiceTest {
     JUser savedJpaUser = new JUser();
     school.hei.demo.domain.entity.User savedDomainUser =
         new school.hei.demo.domain.entity.User(
-            UUID.randomUUID(), request.reference(), request.firstName(), request.lastName(),
-            request.email(), "hashed", request.userRole(), request.specialtyId(),
-            request.entryYear(), null);
+            UUID.randomUUID(),
+            request.reference(),
+            request.firstName(),
+            request.lastName(),
+            request.email(),
+            "hashed",
+            request.userRole(),
+            request.specialtyId(),
+            request.entryYear(),
+            null);
     when(userRepository.save(any())).thenReturn(savedJpaUser);
     when(userMapper.toJpa(any())).thenReturn(new JUser());
     when(passwordEncoder.encode(request.password())).thenReturn("hashed");
@@ -88,8 +104,16 @@ class UserServiceTest {
     JUser jUser = new JUser();
     school.hei.demo.domain.entity.User domainUser =
         new school.hei.demo.domain.entity.User(
-            UUID.randomUUID(), "REF001", "John", "Doe", "john@example.com", "hashed",
-            UserRole.STUDENT, request.specialtyId(), 2025, null);
+            UUID.randomUUID(),
+            "REF001",
+            "John",
+            "Doe",
+            "john@example.com",
+            "hashed",
+            UserRole.STUDENT,
+            request.specialtyId(),
+            2025,
+            null);
     when(userRepository.findAllByFilters(
             eq(UserRole.STUDENT), eq("ref"), eq("john"), eq("doe"), eq("example"), any()))
         .thenReturn(new PageImpl<>(List.of(jUser), PageRequest.of(1, 2), 3));
@@ -113,18 +137,16 @@ class UserServiceTest {
 
     userService.findAll(0, 20, null, " ", null, "", " ");
 
-    verify(userRepository).findAllByFilters(eq(null), eq(null), eq(null), eq(null), eq(null), any());
+    verify(userRepository)
+        .findAllByFilters(eq(null), eq(null), eq(null), eq(null), eq(null), any());
   }
 
   @Test
   void shouldRejectInvalidPagination() {
-    doThrow(new BadRequestException("invalid page"))
-        .when(userValidator)
-        .validatePagination(-1, 20);
+    doThrow(new BadRequestException("invalid page")).when(userValidator).validatePagination(-1, 20);
 
     assertThrows(
-        BadRequestException.class,
-        () -> userService.findAll(-1, 20, null, null, null, null, null));
+        BadRequestException.class, () -> userService.findAll(-1, 20, null, null, null, null, null));
   }
 
   @Test
@@ -155,7 +177,8 @@ class UserServiceTest {
   void shouldUpdateOnlyProvidedFieldsAndHashPassword() {
     UUID id = UUID.randomUUID();
     JUser jUser = existingUser(id);
-    UserUpdate request = new UserUpdate(null, "Updated", null, null, "new-password", null, null, null);
+    UserUpdate request =
+        new UserUpdate(null, "Updated", null, null, "new-password", null, null, null);
     when(userValidator.validateUuid(id.toString())).thenReturn(id);
     when(userRepository.findById(id)).thenReturn(Optional.of(jUser));
     when(passwordEncoder.encode("new-password")).thenReturn("new-hash");
@@ -180,7 +203,9 @@ class UserServiceTest {
 
     assertThrows(
         ConflictException.class,
-        () -> userService.update(id.toString(), new UserUpdate("OTHER", null, null, null, null, null, null, null)));
+        () ->
+            userService.update(
+                id.toString(), new UserUpdate("OTHER", null, null, null, null, null, null, null)));
   }
 
   @Test
@@ -192,7 +217,8 @@ class UserServiceTest {
     when(userRepository.save(jUser)).thenReturn(jUser);
     when(userMapper.toDomain(jUser)).thenReturn(domainUser(id));
 
-    userService.update(id.toString(), new UserUpdate(null, null, null, null, null, null, null, null));
+    userService.update(
+        id.toString(), new UserUpdate(null, null, null, null, null, null, null, null));
     userService.delete(id.toString());
 
     verify(userRepository).save(jUser);
@@ -224,7 +250,15 @@ class UserServiceTest {
 
   private school.hei.demo.domain.entity.User domainUser(UUID id) {
     return new school.hei.demo.domain.entity.User(
-        id, "REF001", "John", "Doe", "john@example.com", "hash", UserRole.STUDENT,
-        request.specialtyId(), 2025, null);
+        id,
+        "REF001",
+        "John",
+        "Doe",
+        "john@example.com",
+        "hash",
+        UserRole.STUDENT,
+        request.specialtyId(),
+        2025,
+        null);
   }
 }

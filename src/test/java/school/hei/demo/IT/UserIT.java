@@ -74,11 +74,7 @@ class UserIT extends FacadeIT {
         new UserUpdate(null, "Updated", null, null, "new-password", null, null, null);
     ResponseEntity<User> updateResponse =
         restTemplate.exchange(
-            "/users/{userId}",
-            HttpMethod.PATCH,
-            json(updateRequest),
-            User.class,
-            userId);
+            "/users/{userId}", HttpMethod.PATCH, json(updateRequest), User.class, userId);
     assertEquals(HttpStatus.OK, updateResponse.getStatusCode());
     assertEquals("Updated", updateResponse.getBody().getFirstName());
 
@@ -97,22 +93,40 @@ class UserIT extends FacadeIT {
     UUID specialtyId = specialtyId();
     UserCreate firstRequest =
         new UserCreate(
-            "REF001", "John", "Doe", "john@example.com", "password", UserRole.STUDENT,
-            specialtyId, 2025);
+            "REF001",
+            "John",
+            "Doe",
+            "john@example.com",
+            "password",
+            UserRole.STUDENT,
+            specialtyId,
+            2025);
     restTemplate.postForEntity("/users", json(firstRequest), User.class);
 
     UserCreate duplicateReference =
         new UserCreate(
-            "REF001", "Jane", "Doe", "jane@example.com", "password", UserRole.STUDENT,
-            specialtyId, 2025);
+            "REF001",
+            "Jane",
+            "Doe",
+            "jane@example.com",
+            "password",
+            UserRole.STUDENT,
+            specialtyId,
+            2025);
     ResponseEntity<String> referenceResponse =
         restTemplate.postForEntity("/users", json(duplicateReference), String.class);
     assertEquals(HttpStatus.CONFLICT, referenceResponse.getStatusCode());
 
     UserCreate duplicateEmail =
         new UserCreate(
-            "REF002", "Jane", "Doe", "JOHN@EXAMPLE.COM", "password", UserRole.STUDENT,
-            specialtyId, 2025);
+            "REF002",
+            "Jane",
+            "Doe",
+            "JOHN@EXAMPLE.COM",
+            "password",
+            UserRole.STUDENT,
+            specialtyId,
+            2025);
     ResponseEntity<String> emailResponse =
         restTemplate.postForEntity("/users", json(duplicateEmail), String.class);
     assertEquals(HttpStatus.CONFLICT, emailResponse.getStatusCode());

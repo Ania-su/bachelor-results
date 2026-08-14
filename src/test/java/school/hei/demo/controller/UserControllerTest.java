@@ -3,11 +3,11 @@ package school.hei.demo.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -22,8 +22,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import school.hei.demo.domain.dto.request.UserCreate;
 import school.hei.demo.domain.dto.request.UserUpdate;
-import school.hei.demo.domain.dto.response.User;
 import school.hei.demo.domain.dto.response.PageMetadata;
+import school.hei.demo.domain.dto.response.User;
 import school.hei.demo.domain.dto.response.UserPage;
 import school.hei.demo.endpoint.rest.controller.UserController;
 import school.hei.demo.enums.UserRole;
@@ -191,9 +191,7 @@ class UserControllerTest {
   @Test
   void shouldReturnBadRequestForNullPatchBody() throws Exception {
     String id = UUID.randomUUID().toString();
-    doThrow(new BadRequestException("Request body is required"))
-        .when(userService)
-        .update(id, null);
+    doThrow(new BadRequestException("Request body is required")).when(userService).update(id, null);
 
     mockMvc
         .perform(patch("/users/{userId}", id).contentType("application/json").content("null"))
@@ -205,18 +203,34 @@ class UserControllerTest {
   void shouldDeleteUser() throws Exception {
     String id = UUID.randomUUID().toString();
 
-    mockMvc.perform(delete("/users/{userId}", id)).andExpect(status().isNoContent()).andExpect(content().string(""));
+    mockMvc
+        .perform(delete("/users/{userId}", id))
+        .andExpect(status().isNoContent())
+        .andExpect(content().string(""));
   }
 
   private UserCreate request() {
     return new UserCreate(
-        "REF001", "John", "Doe", "john@example.com", "password", UserRole.STUDENT,
-        UUID.randomUUID(), 2025);
+        "REF001",
+        "John",
+        "Doe",
+        "john@example.com",
+        "password",
+        UserRole.STUDENT,
+        UUID.randomUUID(),
+        2025);
   }
 
   private User responseUser() {
     return new User(
-        UUID.randomUUID(), "REF001", "John", "Doe", "john@example.com", UserRole.STUDENT,
-        UUID.randomUUID(), 2025, null);
+        UUID.randomUUID(),
+        "REF001",
+        "John",
+        "Doe",
+        "john@example.com",
+        UserRole.STUDENT,
+        UUID.randomUUID(),
+        2025,
+        null);
   }
 }

@@ -62,7 +62,15 @@ class UserMapperTest {
 
   private User domainUser() {
     return new User(
-        UUID.randomUUID(), "REF001", "John", "Doe", "john@example.com", "hashed", UserRole.STUDENT,
-        UUID.randomUUID(), 2025, Instant.now());
+        UUID.randomUUID(),
+        "REF001",
+        "John",
+        "Doe",
+        "john@example.com",
+        "hashed",
+        UserRole.STUDENT,
+        UUID.randomUUID(),
+        2025,
+        Instant.now());
   }
 }
