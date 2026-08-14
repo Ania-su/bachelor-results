@@ -1,9 +1,8 @@
 package school.hei.demo.validators;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.server.ResponseStatusException;
 import school.hei.demo.domain.dto.request.UserCreate;
+import school.hei.demo.exception.BadRequestException;
 
 @Component
 public class UserValidator {
@@ -32,6 +31,6 @@ public class UserValidator {
   }
 
   private void invalid(String message) {
-    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
+    throw new BadRequestException(message);
   }
 }

@@ -1,13 +1,12 @@
 package school.hei.demo.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 import school.hei.demo.domain.dto.request.UserCreate;
 import school.hei.demo.domain.dto.response.User;
 import school.hei.demo.domain.mappers.UserMapper;
+import school.hei.demo.exception.ConflictException;
 import school.hei.demo.repository.UserRepository;
 import school.hei.demo.repository.entity.JUser;
 import school.hei.demo.validators.UserValidator;
@@ -24,7 +23,7 @@ public class UserService {
     userValidator.validate(request);
 
     if (userRepository.existsByEmailIgnoreCase(request.email())) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, "A user with this email already exists");
+      throw new ConflictException("A user with this email already exists");
     }
 
     school.hei.demo.domain.entity.User user =
