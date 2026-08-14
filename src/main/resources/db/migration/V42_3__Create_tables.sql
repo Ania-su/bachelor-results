@@ -172,5 +172,5 @@ CREATE INDEX idx_grade_history_changed_by ON grade_history(changed_by);
 
 INSERT INTO specialty (code, label) VALUES
                                         ('NONE', 'Non défini'),
-                                        ('EL', 'Écosysteme Logiciel'),
+                                        ('EL', 'Écosystème Logiciel'),
                                         ('TN', 'Transformation Numérique');
