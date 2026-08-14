@@ -1,8 +1,10 @@
 package school.hei.demo.domain.mappers;
 
+import org.springframework.stereotype.Component;
 import school.hei.demo.domain.entity.User;
 import school.hei.demo.repository.entity.JUser;
 
+@Component
 public class UserMapper {
   public User toDomain(JUser jUser) {
     if (jUser == null) {
