@@ -7,9 +7,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import school.hei.demo.endpoint.rest.controller.dto.CourseRequest;
+import school.hei.demo.domain.dto.request.CourseRequest;
 import school.hei.demo.endpoint.rest.controller.mapper.CourseRestMapper;
-import school.hei.demo.endpoint.rest.model.CourseResponse;
+import school.hei.demo.domain.dto.response.CourseResponse;
 import school.hei.demo.service.CourseService;
 
 @RestController

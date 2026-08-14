@@ -1,4 +1,4 @@
-package school.hei.demo.repository.mapper;
+package school.hei.demo.domain.mappers;
 
 import org.springframework.stereotype.Component;
 import school.hei.demo.entity.Course;

@@ -1,4 +1,4 @@
-package school.hei.demo.endpoint.rest.controller.validator;
+package school.hei.demo.validators;
 
 import org.springframework.stereotype.Component;
 import school.hei.demo.entity.Course;

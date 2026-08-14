@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import school.hei.demo.entity.CodeType;
+import school.hei.demo.enums.CodeType;
 
 @Entity
 @Table(name = "specialty")

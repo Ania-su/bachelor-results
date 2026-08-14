@@ -5,11 +5,11 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import school.hei.demo.endpoint.rest.controller.validator.CourseValidator;
+import school.hei.demo.validators.CourseValidator;
 import school.hei.demo.entity.Course;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.CourseRepository;
-import school.hei.demo.repository.mapper.CourseMapper;
+import school.hei.demo.domain.mappers.CourseMapper;
 
 @Service
 @AllArgsConstructor

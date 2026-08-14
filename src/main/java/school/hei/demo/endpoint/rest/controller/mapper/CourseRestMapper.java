@@ -1,8 +1,8 @@
 package school.hei.demo.endpoint.rest.controller.mapper;
 
 import org.springframework.stereotype.Component;
-import school.hei.demo.endpoint.rest.controller.dto.CourseRequest;
-import school.hei.demo.endpoint.rest.model.CourseResponse;
+import school.hei.demo.domain.dto.request.CourseRequest;
+import school.hei.demo.domain.dto.response.CourseResponse;
 import school.hei.demo.entity.Course;
 
 @Component

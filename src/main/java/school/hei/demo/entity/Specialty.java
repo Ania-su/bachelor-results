@@ -2,6 +2,7 @@ package school.hei.demo.entity;
 
 import java.util.UUID;
 import lombok.*;
+import school.hei.demo.enums.CodeType;
 
 @Getter
 @Setter

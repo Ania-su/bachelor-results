@@ -1,5 +1,6 @@
-package school.hei.demo.endpoint.rest.controller.dto;
+package school.hei.demo.domain.dto.response;
 
+import java.util.UUID;
 import lombok.*;
 
 @Getter
@@ -7,7 +8,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public class CourseRequest {
+public class CourseResponse {
+  private UUID id;
   private String reference;
   private String title;
   private Integer semester;
