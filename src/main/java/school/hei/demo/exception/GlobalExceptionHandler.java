@@ -9,36 +9,35 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ApiError> handleNotFound(NotFoundException e) {
-        return build(HttpStatus.NOT_FOUND, e.getMessage());
-    }
+  @ExceptionHandler(NotFoundException.class)
+  public ResponseEntity<ApiError> handleNotFound(NotFoundException e) {
+    return build(HttpStatus.NOT_FOUND, e.getMessage());
+  }
 
-    @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ApiError> handleBadRequestException(BadRequestException e) {
-        return build(HttpStatus.BAD_REQUEST, e.getMessage());
-    }
+  @ExceptionHandler(BadRequestException.class)
+  public ResponseEntity<ApiError> handleBadRequestException(BadRequestException e) {
+    return build(HttpStatus.BAD_REQUEST, e.getMessage());
+  }
 
-    @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<ApiError> handleForbiddenException(ForbiddenException e) {
-        return build(HttpStatus.FORBIDDEN, e.getMessage());
-    }
+  @ExceptionHandler(ForbiddenException.class)
+  public ResponseEntity<ApiError> handleForbiddenException(ForbiddenException e) {
+    return build(HttpStatus.FORBIDDEN, e.getMessage());
+  }
 
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ApiError> handleMethodArgumentTypeMismatchException(
-            MethodArgumentTypeMismatchException e) {
-        return build(
-                HttpStatus.BAD_REQUEST, "Invalid id '" + e.getValue() + "': must be a valid UUID.");
-    }
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public ResponseEntity<ApiError> handleMethodArgumentTypeMismatchException(
+      MethodArgumentTypeMismatchException e) {
+    return build(
+        HttpStatus.BAD_REQUEST, "Invalid id '" + e.getValue() + "': must be a valid UUID.");
+  }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> handleGeneric(Exception e) {
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-    }
+  @ExceptionHandler(Exception.class)
+  public ResponseEntity<ApiError> handleGeneric(Exception e) {
+    return build(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+  }
 
-    private ResponseEntity<ApiError> build(HttpStatus status, String message) {
-        ApiError error = new ApiError(status.value(), status.getReasonPhrase(), message);
-        return ResponseEntity.status(status).body(error);
-    }
+  private ResponseEntity<ApiError> build(HttpStatus status, String message) {
+    ApiError error = new ApiError(status.value(), status.getReasonPhrase(), message);
+    return ResponseEntity.status(status).body(error);
+  }
 }
-
