@@ -14,6 +14,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import school.hei.demo.enums.CodeType;
 
 @Entity
@@ -29,6 +31,7 @@ public class JSpecialty {
   @Id @GeneratedValue @EqualsAndHashCode.Include private UUID id;
 
   @Enumerated(EnumType.STRING)
+  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
   @Column(name = "code", nullable = false, unique = true)
   private CodeType code;
 
