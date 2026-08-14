@@ -1,0 +1,1124 @@
+openapi: 3.1.0
+info:
+  title: School Management API
+  version: 0.1.0
+  description: |
+    First draft of the role-based school grading API.
+
+    Authorization is enforced by the service layer. The x-roles extension
+    documents the intended minimum role for each operation.
+servers:
+  - url: https://api.example.com/v1
+    description: Production
+  - url: http://localhost:8080/api/v1
+    description: Local development
+tags:
+  - name: Authentication
+  - name: Users
+  - name: Specialties
+  - name: Courses
+  - name: Course assignments
+  - name: Groups
+  - name: Exams
+  - name: Exam groups
+  - name: Grades
+  - name: Students
+  - name: Promotions
+paths:
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Authenticate a user
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users:
+    get:
+      tags: [Users]
+      summary: List users
+      operationId: listUsers
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: role
+          in: query
+          schema: { $ref: '#/components/schemas/UserRole' }
+        - $ref: '#/components/parameters/Search'
+      responses:
+        '200':
+          description: A paginated user list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserPage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Users]
+      summary: Create a user
+      operationId: createUser
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserCreate' }
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /users/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      tags: [Users]
+      summary: Get a user
+      operationId: getUser
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Users]
+      summary: Update a user
+      operationId: updateUser
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserUpdate' }
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Users]
+      summary: Delete a user
+      operationId: deleteUser
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: User deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /specialties:
+    get:
+      tags: [Specialties]
+      summary: List specialties
+      operationId: listSpecialties
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Specialty list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Specialty' }
+    post:
+      tags: [Specialties]
+      summary: Create a specialty
+      operationId: createSpecialty
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SpecialtyInput' }
+      responses:
+        '201':
+          description: Specialty created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Specialty' }
+
+  /specialties/{specialtyId}:
+    parameters:
+      - $ref: '#/components/parameters/SpecialtyId'
+    get:
+      tags: [Specialties]
+      summary: Get a specialty
+      operationId: getSpecialty
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Specialty details
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Specialty' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Specialties]
+      summary: Update a specialty
+      operationId: updateSpecialty
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SpecialtyInput' }
+      responses:
+        '200':
+          description: Specialty updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Specialty' }
+    delete:
+      tags: [Specialties]
+      summary: Delete a specialty
+      operationId: deleteSpecialty
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Specialty deleted }
+
+  /courses:
+    get:
+      tags: [Courses]
+      summary: List courses
+      operationId: listCourses
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: semester
+          in: query
+          schema: { type: integer, minimum: 1 }
+        - $ref: '#/components/parameters/Search'
+      responses:
+        '200':
+          description: A paginated course list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CoursePage' }
+    post:
+      tags: [Courses]
+      summary: Create a course
+      operationId: createCourse
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CourseInput' }
+      responses:
+        '201':
+          description: Course created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Course' }
+
+  /courses/{courseId}:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    get:
+      tags: [Courses]
+      summary: Get a course
+      operationId: getCourse
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Course details
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Course' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Courses]
+      summary: Update a course
+      operationId: updateCourse
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CourseInput' }
+      responses:
+        '200':
+          description: Course updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Course' }
+    delete:
+      tags: [Courses]
+      summary: Delete a course
+      operationId: deleteCourse
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Course deleted }
+
+  /courses/{courseId}/assignments:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    get:
+      tags: [Course assignments]
+      summary: List assignments for a course
+      operationId: listAssignmentsForCourse
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Course assignments
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CourseAssignment' }
+
+    post:
+      tags: [Course assignments]
+      summary: Assign a course to a teacher and group
+      operationId: createCourseAssignment
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CourseAssignmentInput' }
+      responses:
+        '201':
+          description: Assignment created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CourseAssignment' }
+
+  /courses/{courseId}/assignments/{assignmentId}:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+      - $ref: '#/components/parameters/AssignmentId'
+    get:
+      tags: [Course assignments]
+      summary: Get a course assignment
+      operationId: getCourseAssignment
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Assignment details
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CourseAssignment' }
+    patch:
+      tags: [Course assignments]
+      summary: Update a course assignment
+      operationId: updateCourseAssignment
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CourseAssignmentInput' }
+      responses:
+        '200':
+          description: Assignment updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CourseAssignment' }
+    delete:
+      tags: [Course assignments]
+      summary: Delete a course assignment
+      operationId: deleteCourseAssignment
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Assignment deleted }
+
+  /groups:
+    get:
+      tags: [Groups]
+      summary: List student groups
+      operationId: listGroups
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: academicYear
+          in: query
+          schema: { type: integer }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Group list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GroupPage' }
+    post:
+      tags: [Groups]
+      summary: Create a student group
+      operationId: createGroup
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupInput' }
+      responses:
+        '201':
+          description: Group created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Group' }
+
+  /groups/{groupId}:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    get:
+      tags: [Groups]
+      summary: Get a group
+      operationId: getGroup
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Group details
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Group' }
+    patch:
+      tags: [Groups]
+      summary: Update a group
+      operationId: updateGroup
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupInput' }
+      responses:
+        '200':
+          description: Group updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Group' }
+    delete:
+      tags: [Groups]
+      summary: Delete a group
+      operationId: deleteGroup
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Group deleted }
+
+  /groups/{groupId}/students:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    get:
+      tags: [Groups]
+      summary: List students currently associated with a group
+      operationId: listStudentsForGroup
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Student list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/User' }
+
+  /courses/{courseId}/exams:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    get:
+      tags: [Exams]
+      summary: List exams for a course
+      operationId: listExamsForCourse
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Course exams
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Exam' }
+
+    post:
+      tags: [Exams]
+      summary: Create an exam for a course
+      operationId: createExam
+      x-roles: [ADMIN, TEACHER]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExamInput' }
+      responses:
+        '201':
+          description: Exam created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exam' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /courses/{courseId}/exams/{examId}:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+      - $ref: '#/components/parameters/ExamId'
+    get:
+      tags: [Exams]
+      summary: Get an exam
+      operationId: getExam
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Exam details
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exam' }
+    patch:
+      tags: [Exams]
+      summary: Update an exam
+      operationId: updateExam
+      x-roles: [ADMIN, TEACHER]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExamInput' }
+      responses:
+        '200':
+          description: Exam updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exam' }
+    delete:
+      tags: [Exams]
+      summary: Delete an exam
+      operationId: deleteExam
+      x-roles: [ADMIN, TEACHER]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Exam deleted }
+
+  /courses/{courseId}/exams/{examId}/groups:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+      - $ref: '#/components/parameters/ExamId'
+    get:
+      tags: [Exam groups]
+      summary: List groups taking an exam
+      operationId: listGroupsForExam
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Exam groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ExamGroup' }
+
+    post:
+      tags: [Exam groups]
+      summary: Schedule an exam for a group
+      operationId: createExamGroup
+      x-roles: [ADMIN, TEACHER]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExamGroupInput' }
+      responses:
+        '201':
+          description: Exam-group link created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExamGroup' }
+
+  /courses/{courseId}/exams/{examId}/groups/{examGroupId}:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+      - $ref: '#/components/parameters/ExamId'
+      - $ref: '#/components/parameters/ExamGroupId'
+    get:
+      tags: [Exam groups]
+      summary: Get an exam-group link
+      operationId: getExamGroup
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Exam-group link
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExamGroup' }
+    delete:
+      tags: [Exam groups]
+      summary: Remove an exam from a group
+      operationId: deleteExamGroup
+      x-roles: [ADMIN, TEACHER]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Link deleted }
+
+  /courses/{courseId}/exams/{examId}/grades:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+      - $ref: '#/components/parameters/ExamId'
+    get:
+      tags: [Grades]
+      summary: List grades for an exam
+      operationId: listGradesForExam
+      x-roles: [STUDENT, TEACHER, ADMIN]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: studentId
+          in: query
+          description: Optional student filter. Students may only use their own ID.
+          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Exam grades
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GradePage' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+    post:
+      tags: [Grades]
+      summary: Create a grade for an exam
+      operationId: createGrade
+      x-roles: [ADMIN, TEACHER]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GradeCreate' }
+      responses:
+        '201':
+          description: Grade created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Grade' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /courses/{courseId}/exams/{examId}/grades/{gradeId}:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+      - $ref: '#/components/parameters/ExamId'
+      - $ref: '#/components/parameters/GradeId'
+    get:
+      tags: [Grades]
+      summary: Get a grade
+      operationId: getGrade
+      x-roles: [STUDENT, TEACHER, ADMIN]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Grade details
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Grade' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    patch:
+      tags: [Grades]
+      summary: Change a grade with an audit record
+      operationId: updateGrade
+      description: Every value change must create a GradeHistory record.
+      x-roles: [TEACHER, ADMIN]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GradeUpdate' }
+      responses:
+        '200':
+          description: Updated grade
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Grade' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    delete:
+      tags: [Grades]
+      summary: Delete a grade with an audit record
+      operationId: deleteGrade
+      description: Deletion must preserve the previous value in grade history.
+      x-roles: [TEACHER, ADMIN]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GradeDelete' }
+      responses:
+        '204': { description: Grade deleted and deletion audited }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /me/transcript-email:
+    get:
+      tags: [Students]
+      summary: Download the authenticated student's transcript
+      operationId: downloadMyTranscript
+      x-roles: [STUDENT, ADMIN]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/TranscriptYear'
+      responses:
+        '200':
+          description: PDF transcript
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+
+  /student/{studentId}/transcript:
+    get:
+      tags: [Students]
+      summary: Download a student's transcript
+      operationId: downloadStudentTranscript
+      x-roles: [STUDENT, ADMIN]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/StudentId'
+        - $ref: '#/components/parameters/TranscriptYear'
+      responses:
+        '200':
+          description: PDF transcript
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /students/{studentId}/transcript-email:
+    post:
+      tags: [Students]
+      summary: Generate and email a student's transcript
+      operationId: emailStudentTranscript
+      x-roles: [STUDENT, ADMIN]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/StudentId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recipientEmail: { type: string, format: email }
+      responses:
+        '202':
+          description: Transcript generation and email queued
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TranscriptDelivery' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /promotions:
+    get:
+      tags: [Promotions]
+      summary: List every group across all academic years
+      operationId: listAllPromotionGroups
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: All groups ever created
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Group' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /promotions/{academicYear}/graduates:
+    get:
+      tags: [Promotions]
+      summary: List graduates for a promotion
+      operationId: listGraduates
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/AcademicYear'
+      responses:
+        '200':
+          description: Graduate list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Graduate' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    UserId: { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+    StudentId: { name: studentId, in: path, required: true, schema: { type: string, format: uuid } }
+    SpecialtyId: { name: specialtyId, in: path, required: true, schema: { type: string, format: uuid } }
+    CourseId: { name: courseId, in: path, required: true, schema: { type: string, format: uuid } }
+    GroupId: { name: groupId, in: path, required: true, schema: { type: string, format: uuid } }
+    AssignmentId: { name: assignmentId, in: path, required: true, schema: { type: string, format: uuid } }
+    ExamId: { name: examId, in: path, required: true, schema: { type: string, format: uuid } }
+    ExamGroupId: { name: examGroupId, in: path, required: true, schema: { type: string, format: uuid } }
+    GradeId: { name: gradeId, in: path, required: true, schema: { type: string, format: uuid } }
+    AcademicYear: { name: academicYear, in: path, required: true, schema: { type: integer, minimum: 2000 } }
+    TranscriptYear:
+      name: year
+      in: query
+      required: false
+      description: Academic year to include in the transcript
+      schema: { type: integer, minimum: 2000 }
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 0, default: 0 }
+    PageSize:
+      name: pageSize
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    Search:
+      name: search
+      in: query
+      schema: { type: string, maxLength: 255 }
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Unauthorized:
+      description: Authentication required or token invalid
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Forbidden:
+      description: Authenticated user is not allowed to perform this operation
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFound:
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Conflict:
+      description: Operation conflicts with existing data
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+
+  schemas:
+    UUID:
+      type: string
+      format: uuid
+    UserRole:
+      type: string
+      enum: [STUDENT, TEACHER, ADMIN]
+    CodaType:
+      type: string
+      enum: [NONE, EL, TN]
+    User:
+      type: object
+      required: [id, email, userRole]
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        reference: { type: string, maxLength: 8 }
+        firstName: { type: string, maxLength: 255 }
+        lastName: { type: string, maxLength: 255 }
+        email: { type: string, format: email, maxLength: 255 }
+        userRole: { $ref: '#/components/schemas/UserRole' }
+        specialtyCodeType: { $ref: '#/components/schemas/CodaType' }
+        entryYear: { type: integer }
+        createdAt: { type: string, format: date-time }
+    UserCreate:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          required: [password]
+          properties:
+            id: { readOnly: true }
+            createdAt: { readOnly: true }
+            password: { type: string, format: password, minLength: 8, writeOnly: true }
+    UserUpdate:
+      type: object
+      properties:
+        reference: { type: string, maxLength: 8 }
+        firstName: { type: string, maxLength: 255 }
+        lastName: { type: string, maxLength: 255 }
+        email: { type: string, format: email, maxLength: 255 }
+        password: { type: string, format: password, minLength: 8, writeOnly: true }
+        userRole: { $ref: '#/components/schemas/UserRole' }
+        specialtyCodeType: { $ref: '#/components/schemas/CodaType' }
+        entryYear: { type: integer }
+    Specialty:
+      type: object
+      required: [id, codeType]
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        codeType: { $ref: '#/components/schemas/CodaType' }
+        label: { type: string, maxLength: 255 }
+    SpecialtyInput:
+      type: object
+      required: [codeType]
+      properties:
+        codeType: { $ref: '#/components/schemas/CodaType' }
+        label: { type: string, maxLength: 255 }
+    Course:
+      type: object
+      required: [id]
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        reference: { type: string, maxLength: 8 }
+        title: { type: string, maxLength: 255 }
+        semester: { type: integer, minimum: 1 }
+        credits: { type: integer, minimum: 0 }
+    CourseInput:
+      type: object
+      properties:
+        reference: { type: string, maxLength: 8 }
+        title: { type: string, maxLength: 255 }
+        semester: { type: integer, minimum: 1 }
+        credits: { type: integer, minimum: 0 }
+    Group:
+      type: object
+      required: [id]
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        reference: { type: string, maxLength: 2 }
+        academicYear: { type: integer }
+    GroupInput:
+      type: object
+      properties:
+        reference: { type: string, maxLength: 2 }
+        academicYear: { type: integer }
+    CourseAssignment:
+      type: object
+      required: [id, courseId, teacherId, groupId]
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        courseId: { $ref: '#/components/schemas/UUID' }
+        teacherId: { $ref: '#/components/schemas/UUID' }
+        groupId: { $ref: '#/components/schemas/UUID' }
+    CourseAssignmentInput:
+      type: object
+      required: [courseId, teacherId, groupId]
+      properties:
+        courseId: { $ref: '#/components/schemas/UUID' }
+        teacherId: { $ref: '#/components/schemas/UUID' }
+        groupId: { $ref: '#/components/schemas/UUID' }
+    CourseSpecialty:
+      type: object
+      required: [id, courseId, specialtyId]
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        courseId: { $ref: '#/components/schemas/UUID' }
+        specialtyId: { $ref: '#/components/schemas/UUID' }
+    Exam:
+      type: object
+      required: [id, courseId]
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        courseId: { $ref: '#/components/schemas/UUID' }
+        dateExam: { type: string, format: date-time }
+        coef: { type: number, minimum: 0, maximum: 99.99, multipleOf: 0.01 }
+    ExamInput:
+      type: object
+      required: [courseId]
+      properties:
+        courseId: { $ref: '#/components/schemas/UUID' }
+        dateExam: { type: string, format: date-time }
+        coef: { type: number, minimum: 0, maximum: 99.99, multipleOf: 0.01 }
+    ExamGroup:
+      type: object
+      required: [id, examId, groupId]
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        examId: { $ref: '#/components/schemas/UUID' }
+        groupId: { $ref: '#/components/schemas/UUID' }
+    ExamGroupInput:
+      type: object
+      required: [examId, groupId]
+      properties:
+        examId: { $ref: '#/components/schemas/UUID' }
+        groupId: { $ref: '#/components/schemas/UUID' }
+    Grade:
+      type: object
+      required: [id, studentId, examId, value]
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        studentId: { $ref: '#/components/schemas/UUID' }
+        examId: { $ref: '#/components/schemas/UUID' }
+        value: { type: number, minimum: 0, maximum: 20, multipleOf: 0.01 }
+        updatedAt: { type: string, format: date-time }
+    GradeCreate:
+      type: object
+      required: [studentId, examId, value]
+      properties:
+        studentId: { $ref: '#/components/schemas/UUID' }
+        examId: { $ref: '#/components/schemas/UUID' }
+        value: { type: number, minimum: 0, maximum: 20, multipleOf: 0.01 }
+    GradeUpdate:
+      type: object
+      required: [value, reason]
+      properties:
+        value: { type: number, minimum: 0, maximum: 20, multipleOf: 0.01 }
+        reason: { type: string, minLength: 1, maxLength: 255 }
+    GradeDelete:
+      type: object
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 1, maxLength: 255 }
+    GradeHistory:
+      type: object
+      required: [id, gradeId, changedBy, changedAt]
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        gradeId: { $ref: '#/components/schemas/UUID' }
+        oldValue: { type: [number, 'null'], minimum: 0, maximum: 20, multipleOf: 0.01 }
+        newValue: { type: [number, 'null'], minimum: 0, maximum: 20, multipleOf: 0.01 }
+        reason: { type: string, maxLength: 255 }
+        changedBy: { $ref: '#/components/schemas/UUID' }
+        changedAt: { type: string, format: date-time }
+    StudentGroupHistory:
+      type: object
+      required: [id, studentId, groupId, startDate]
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        studentId: { $ref: '#/components/schemas/UUID' }
+        groupId: { $ref: '#/components/schemas/UUID' }
+        startDate: { type: string, format: date }
+        endDate: { type: [string, 'null'], format: date }
+    StudentGroupHistoryInput:
+      type: object
+      required: [studentId, groupId, startDate]
+      properties:
+        studentId: { $ref: '#/components/schemas/UUID' }
+        groupId: { $ref: '#/components/schemas/UUID' }
+        startDate: { type: string, format: date }
+        endDate: { type: [string, 'null'], format: date }
+    Promotion:
+      type: object
+      required: [academicYear]
+      properties:
+        academicYear: { type: integer }
+        groupCount: { type: integer, minimum: 0 }
+        studentCount: { type: integer, minimum: 0 }
+    Graduate:
+      type: object
+      required: [studentId, reference, firstName, lastName]
+      properties:
+        studentId: { $ref: '#/components/schemas/UUID' }
+        reference: { type: string }
+        firstName: { type: string }
+        lastName: { type: string }
+        academicYear: { type: integer }
+    PromotionResult:
+      type: object
+      required: [studentId]
+      properties:
+        studentId: { $ref: '#/components/schemas/UUID' }
+        student: { $ref: '#/components/schemas/User' }
+        average: { type: number, minimum: 0, maximum: 20, multipleOf: 0.01 }
+        grades:
+          type: array
+          items: { $ref: '#/components/schemas/Grade' }
+    TranscriptDelivery:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [QUEUED, SENT, FAILED]
+        recipientEmail: { type: string, format: email }
+        downloadUrl: { type: string, format: uri, description: Temporary AWS S3 URL }
+        expiresAt: { type: string, format: date-time }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+    AuthResponse:
+      type: object
+      required: [accessToken, tokenType, expiresIn, user]
+      properties:
+        accessToken: { type: string }
+        tokenType: { type: string, example: Bearer }
+        expiresIn: { type: integer, description: Token lifetime in seconds }
+        user: { $ref: '#/components/schemas/User' }
+    PageMetadata:
+      type: object
+      required: [page, pageSize, totalElements, totalPages]
+      properties:
+        page: { type: integer }
+        pageSize: { type: integer }
+        totalElements: { type: integer }
+        totalPages: { type: integer }
+    UserPage:
+      type: object
+      properties:
+        content: { type: array, items: { $ref: '#/components/schemas/User' } }
+        page: { $ref: '#/components/schemas/PageMetadata' }
+    CoursePage:
+      type: object
+      properties:
+        content: { type: array, items: { $ref: '#/components/schemas/Course' } }
+        page: { $ref: '#/components/schemas/PageMetadata' }
+    GroupPage:
+      type: object
+      properties:
+        content: { type: array, items: { $ref: '#/components/schemas/Group' } }
+        page: { $ref: '#/components/schemas/PageMetadata' }
+    GradePage:
+      type: object
+      properties:
+        content: { type: array, items: { $ref: '#/components/schemas/Grade' } }
+        page: { $ref: '#/components/schemas/PageMetadata' }
+    Problem:
+      type: object
+      properties:
+        type: { type: string, format: uri, default: about:blank }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string, format: uri }
