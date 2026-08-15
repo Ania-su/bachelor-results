@@ -10,6 +10,7 @@ import school.hei.demo.entity.Course;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.CourseRepository;
 import school.hei.demo.validators.CourseValidator;
+import school.hei.demo.validators.PaginationValidator;
 
 @Service
 @AllArgsConstructor
@@ -18,8 +19,10 @@ public class CourseService {
   private final CourseRepository repository;
   private final CourseMapper mapper;
   private final CourseValidator validator;
+  private final PaginationValidator paginationValidator;
 
   public Page<Course> list(Integer semester, String search, int page, int pageSize) {
+    paginationValidator.validate(page, pageSize);
     return repository
         .findAllFiltered(semester, search, PageRequest.of(page, pageSize))
         .map(mapper::toDomain);

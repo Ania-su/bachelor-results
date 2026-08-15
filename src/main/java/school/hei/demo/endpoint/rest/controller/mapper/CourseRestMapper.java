@@ -20,6 +20,7 @@ public class CourseRestMapper {
   }
 
   public Course toDomain(CourseRequest request) {
+    if (request == null) return null;
     return Course.builder()
         .reference(request.getReference())
         .title(request.getTitle())

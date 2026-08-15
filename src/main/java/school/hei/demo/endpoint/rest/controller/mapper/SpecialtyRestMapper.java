@@ -18,6 +18,7 @@ public class SpecialtyRestMapper {
   }
 
   public Specialty toDomain(SpecialtyRequest request) {
+    if (request == null) return null;
     return Specialty.builder().code(request.getCodeType()).label(request.getLabel()).build();
   }
 }
