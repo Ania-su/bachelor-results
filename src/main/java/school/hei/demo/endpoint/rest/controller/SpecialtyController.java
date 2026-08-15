@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import school.hei.demo.domain.dto.request.SpecialtyRequest;
 import school.hei.demo.domain.dto.response.SpecialtyResponse;
@@ -20,32 +19,30 @@ public class SpecialtyController {
   private final SpecialtyRestMapper mapper;
 
   @GetMapping
-  public ResponseEntity<List<SpecialtyResponse>> listSpecialties() {
-    var body = service.list().stream().map(mapper::toResponse).toList();
-    return ResponseEntity.ok(body);
+  public List<SpecialtyResponse> listSpecialties() {
+    return service.list().stream().map(mapper::toResponse).toList();
   }
 
   @GetMapping("/{specialtyId}")
-  public ResponseEntity<SpecialtyResponse> getSpecialty(@PathVariable UUID specialtyId) {
-    return ResponseEntity.ok(mapper.toResponse(service.get(specialtyId)));
+  public SpecialtyResponse getSpecialty(@PathVariable UUID specialtyId) {
+    return mapper.toResponse(service.get(specialtyId));
   }
 
   @PostMapping
-  public ResponseEntity<SpecialtyResponse> createSpecialty(@RequestBody SpecialtyRequest request) {
-    var created = mapper.toResponse(service.create(mapper.toDomain(request)));
-    return ResponseEntity.status(HttpStatus.CREATED).body(created);
+  @ResponseStatus(HttpStatus.CREATED)
+  public SpecialtyResponse createSpecialty(@RequestBody SpecialtyRequest request) {
+    return mapper.toResponse(service.create(mapper.toDomain(request)));
   }
 
   @PatchMapping("/{specialtyId}")
-  public ResponseEntity<SpecialtyResponse> updateSpecialty(
+  public SpecialtyResponse updateSpecialty(
       @PathVariable UUID specialtyId, @RequestBody SpecialtyRequest request) {
-    var updated = mapper.toResponse(service.update(specialtyId, mapper.toDomain(request)));
-    return ResponseEntity.ok(updated);
+    return mapper.toResponse(service.update(specialtyId, mapper.toDomain(request)));
   }
 
   @DeleteMapping("/{specialtyId}")
-  public ResponseEntity<Void> deleteSpecialty(@PathVariable UUID specialtyId) {
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void deleteSpecialty(@PathVariable UUID specialtyId) {
     service.delete(specialtyId);
-    return ResponseEntity.noContent().build();
   }
 }
