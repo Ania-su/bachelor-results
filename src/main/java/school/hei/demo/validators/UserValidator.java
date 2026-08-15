@@ -35,9 +35,11 @@ public class UserValidator {
     }
 
     requireText(request.reference(), "reference");
+    validateMaxLength(request.reference(), "reference", 8);
     requireText(request.firstName(), "firstName");
     requireText(request.lastName(), "lastName");
     requireText(request.email(), "email");
+    validateMaxLength(request.email(), "email", 255);
     requireText(request.password(), "password");
 
     if (request.userRole() == null) {
@@ -57,9 +59,11 @@ public class UserValidator {
     }
 
     validateOptionalText(request.reference(), "reference");
+    validateMaxLength(request.reference(), "reference", 8);
     validateOptionalText(request.firstName(), "firstName");
     validateOptionalText(request.lastName(), "lastName");
     validateOptionalText(request.email(), "email");
+    validateMaxLength(request.email(), "email", 255);
     validateOptionalText(request.password(), "password");
   }
 
@@ -72,6 +76,12 @@ public class UserValidator {
   private void validateOptionalText(String value, String fieldName) {
     if (value != null && value.isBlank()) {
       invalid(fieldName + " cannot be blank");
+    }
+  }
+
+  private void validateMaxLength(String value, String fieldName, int maxLength) {
+    if (value != null && value.length() > maxLength) {
+      invalid(fieldName + " must be at most " + maxLength + " characters");
     }
   }
 
