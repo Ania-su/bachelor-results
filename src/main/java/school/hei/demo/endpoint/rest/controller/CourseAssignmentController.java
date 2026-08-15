@@ -16,42 +16,43 @@ import school.hei.demo.service.CourseAssignmentService;
 @AllArgsConstructor
 public class CourseAssignmentController {
 
-    private final CourseAssignmentService service;
-    private final CourseAssignmentRestMapper mapper;
+  private final CourseAssignmentService service;
+  private final CourseAssignmentRestMapper mapper;
 
-    @GetMapping
-    public ResponseEntity<List<CourseAssignmentResponse>> listAssignments(
-            @PathVariable UUID courseId) {
-        var body = service.listForCourse(courseId).stream().map(mapper::toResponse).toList();
-        return ResponseEntity.ok(body);
-    }
+  @GetMapping
+  public ResponseEntity<List<CourseAssignmentResponse>> listAssignments(
+      @PathVariable UUID courseId) {
+    var body = service.listForCourse(courseId).stream().map(mapper::toResponse).toList();
+    return ResponseEntity.ok(body);
+  }
 
-    @GetMapping("/{assignmentId}")
-    public ResponseEntity<CourseAssignmentResponse> getAssignment(
-            @PathVariable UUID courseId, @PathVariable UUID assignmentId) {
-        return ResponseEntity.ok(mapper.toResponse(service.get(courseId, assignmentId)));
-    }
+  @GetMapping("/{assignmentId}")
+  public ResponseEntity<CourseAssignmentResponse> getAssignment(
+      @PathVariable UUID courseId, @PathVariable UUID assignmentId) {
+    return ResponseEntity.ok(mapper.toResponse(service.get(courseId, assignmentId)));
+  }
 
-    @PostMapping
-    public ResponseEntity<CourseAssignmentResponse> createAssignment(
-            @PathVariable UUID courseId, @RequestBody CourseAssignmentRequest request) {
-        var created = mapper.toResponse(service.create(courseId, mapper.toDomain(request)));
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
+  @PostMapping
+  public ResponseEntity<CourseAssignmentResponse> createAssignment(
+      @PathVariable UUID courseId, @RequestBody CourseAssignmentRequest request) {
+    var created = mapper.toResponse(service.create(courseId, mapper.toDomain(request)));
+    return ResponseEntity.status(HttpStatus.CREATED).body(created);
+  }
 
-    @PatchMapping("/{assignmentId}")
-    public ResponseEntity<CourseAssignmentResponse> updateAssignment(
-            @PathVariable UUID courseId, @PathVariable UUID assignmentId,
-            @RequestBody CourseAssignmentRequest request) {
-        var updated = mapper.toResponse(
-                service.update(courseId, assignmentId, mapper.toDomain(request)));
-        return ResponseEntity.ok(updated);
-    }
+  @PatchMapping("/{assignmentId}")
+  public ResponseEntity<CourseAssignmentResponse> updateAssignment(
+      @PathVariable UUID courseId,
+      @PathVariable UUID assignmentId,
+      @RequestBody CourseAssignmentRequest request) {
+    var updated =
+        mapper.toResponse(service.update(courseId, assignmentId, mapper.toDomain(request)));
+    return ResponseEntity.ok(updated);
+  }
 
-    @DeleteMapping("/{assignmentId}")
-    public ResponseEntity<Void> deleteAssignment(
-            @PathVariable UUID courseId, @PathVariable UUID assignmentId) {
-        service.delete(courseId, assignmentId);
-        return ResponseEntity.noContent().build();
-    }
+  @DeleteMapping("/{assignmentId}")
+  public ResponseEntity<Void> deleteAssignment(
+      @PathVariable UUID courseId, @PathVariable UUID assignmentId) {
+    service.delete(courseId, assignmentId);
+    return ResponseEntity.noContent().build();
+  }
 }

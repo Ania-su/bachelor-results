@@ -7,7 +7,7 @@ import school.hei.demo.repository.model.JCourseAssignment;
 
 public interface CourseAssignmentRepository extends JpaRepository<JCourseAssignment, UUID> {
 
-    List<JCourseAssignment> findAllByCourse_Id(UUID courseId);
+  List<JCourseAssignment> findAllByCourse_Id(UUID courseId);
 
-    boolean existsByCourse_IdAndTeacherIdAndGroup_Id(UUID courseId, UUID teacherId, UUID groupId);
+  boolean existsByCourse_IdAndTeacherIdAndGroup_Id(UUID courseId, UUID teacherId, UUID groupId);
 }

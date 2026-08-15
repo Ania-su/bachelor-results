@@ -14,19 +14,16 @@ import lombok.*;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class JCourseAssignment {
 
-    @Id
-    @GeneratedValue
-    @EqualsAndHashCode.Include
-    private UUID id;
+  @Id @GeneratedValue @EqualsAndHashCode.Include private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_course", nullable = false)
-    private JCourse course;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "id_course", nullable = false)
+  private JCourse course;
 
-    @Column(name = "id_teacher", nullable = false)
-    private UUID teacherId;
+  @Column(name = "id_teacher", nullable = false)
+  private UUID teacherId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_group", nullable = false)
-    private JGroup group;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "id_group", nullable = false)
+  private JGroup group;
 }

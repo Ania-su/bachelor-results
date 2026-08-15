@@ -8,20 +8,20 @@ import school.hei.demo.entity.CourseAssignment;
 @Component
 public class CourseAssignmentRestMapper {
 
-    public CourseAssignmentResponse toResponse(CourseAssignment a) {
-        if (a == null) return null;
-        return CourseAssignmentResponse.builder()
-                .id(a.getId())
-                .courseId(a.getCourseId())
-                .teacherId(a.getTeacherId())
-                .groupId(a.getGroupId())
-                .build();
-    }
+  public CourseAssignmentResponse toResponse(CourseAssignment a) {
+    if (a == null) return null;
+    return CourseAssignmentResponse.builder()
+        .id(a.getId())
+        .courseId(a.getCourseId())
+        .teacherId(a.getTeacherId())
+        .groupId(a.getGroupId())
+        .build();
+  }
 
-    public CourseAssignment toDomain(CourseAssignmentRequest request) {
-        return CourseAssignment.builder()
-                .teacherId(request.getTeacherId())
-                .groupId(request.getGroupId())
-                .build();
-    }
+  public CourseAssignment toDomain(CourseAssignmentRequest request) {
+    return CourseAssignment.builder()
+        .teacherId(request.getTeacherId())
+        .groupId(request.getGroupId())
+        .build();
+  }
 }
