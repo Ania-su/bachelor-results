@@ -10,6 +10,7 @@ import school.hei.demo.entity.Group;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.GroupRepository;
 import school.hei.demo.validators.GroupValidator;
+import school.hei.demo.validators.PaginationValidator;
 
 @Service
 @AllArgsConstructor
@@ -18,8 +19,10 @@ public class GroupService {
   private final GroupRepository repository;
   private final GroupMapper mapper;
   private final GroupValidator validator;
+  private final PaginationValidator paginationValidator;
 
   public Page<Group> list(Integer academicYear, int page, int pageSize) {
+    paginationValidator.validate(page, pageSize);
     return repository
         .findAllFiltered(academicYear, PageRequest.of(page, pageSize))
         .map(mapper::toDomain);

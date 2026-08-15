@@ -18,6 +18,7 @@ public class GroupRestMapper {
   }
 
   public Group toDomain(GroupRequest request) {
+    if (request == null) return null;
     return Group.builder()
         .reference(request.getReference())
         .academicYear(request.getAcademicYear())

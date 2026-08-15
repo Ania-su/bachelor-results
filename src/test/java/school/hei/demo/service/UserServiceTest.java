@@ -39,6 +39,7 @@ class UserServiceTest {
   @Mock UserMapper userMapper;
   @Mock PasswordEncoder passwordEncoder;
   @Mock UserValidator userValidator;
+  @Mock school.hei.demo.repository.SpecialtyRepository specialtyRepository;
   @InjectMocks UserService userService;
 
   private UserCreate request;
@@ -73,6 +74,7 @@ class UserServiceTest {
             request.entryYear(),
             null);
     when(userRepository.save(any())).thenReturn(savedJpaUser);
+    when(specialtyRepository.existsById(request.specialtyId())).thenReturn(true);
     when(userMapper.toJpa(any())).thenReturn(new JUser());
     when(passwordEncoder.encode(request.password())).thenReturn("hashed");
     when(userMapper.toDomain(savedJpaUser)).thenReturn(savedDomainUser);

@@ -16,6 +16,7 @@ import school.hei.demo.domain.mappers.UserMapper;
 import school.hei.demo.enums.UserRole;
 import school.hei.demo.exception.ConflictException;
 import school.hei.demo.exception.NotFoundException;
+import school.hei.demo.repository.SpecialtyRepository;
 import school.hei.demo.repository.UserRepository;
 import school.hei.demo.repository.entity.JUser;
 import school.hei.demo.validators.UserValidator;
@@ -27,6 +28,7 @@ public class UserService {
   private final UserMapper userMapper;
   private final PasswordEncoder passwordEncoder;
   private final UserValidator userValidator;
+  private final SpecialtyRepository specialtyRepository;
 
   public User create(UserCreate request) {
     userValidator.validate(request);
@@ -37,6 +39,7 @@ public class UserService {
     if (userRepository.existsByEmailIgnoreCase(request.email())) {
       throw new ConflictException("A user with this email already exists");
     }
+    ensureSpecialtyExists(request.specialtyId());
 
     school.hei.demo.domain.entity.User user =
         new school.hei.demo.domain.entity.User(
@@ -105,6 +108,9 @@ public class UserService {
         && userRepository.existsByEmailIgnoreCaseAndIdNot(request.email(), uuid)) {
       throw new ConflictException("A user with this email already exists");
     }
+    if (request.specialtyId() != null) {
+      ensureSpecialtyExists(request.specialtyId());
+    }
 
     if (request.reference() != null) user.setReference(request.reference());
     if (request.firstName() != null) user.setFirstName(request.firstName());
@@ -147,5 +153,11 @@ public class UserService {
 
   private String normalizeFilter(String value) {
     return value == null || value.isBlank() ? null : value.trim();
+  }
+
+  private void ensureSpecialtyExists(UUID specialtyId) {
+    if (!specialtyRepository.existsById(specialtyId)) {
+      throw new NotFoundException("Specialty not found: " + specialtyId);
+    }
   }
 }

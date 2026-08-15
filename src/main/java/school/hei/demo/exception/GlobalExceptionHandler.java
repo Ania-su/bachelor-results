@@ -1,5 +1,6 @@
 package school.hei.demo.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -41,6 +42,11 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ApiError> handleHttpMessageNotReadableException(
       HttpMessageNotReadableException e) {
     return build(HttpStatus.BAD_REQUEST, "Request body must be valid JSON.");
+  }
+
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<ApiError> handleDataIntegrityViolation(DataIntegrityViolationException e) {
+    return build(HttpStatus.CONFLICT, "The request conflicts with existing data.");
   }
 
   @ExceptionHandler(Exception.class)
