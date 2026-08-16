@@ -29,11 +29,12 @@ public class StudentTranscriptService {
             .orElseThrow(() -> new NotFoundException("Student " + studentId + " not found"));
 
     var courses =
-        courseRepository.findAll().stream()
+        courseRepository.findAllForTranscript(user.getSpecialtyId()).stream()
             .map(
                 course -> {
                   var courseGrade = studentCourseGradeService.get(course.getId(), studentId);
-                  return new CourseAverageResponse(courseGrade.getCourse(), courseGrade.getAverage());
+                  return new CourseAverageResponse(
+                      courseGrade.getCourse(), courseGrade.getAverage());
                 })
             .toList();
 
