@@ -318,6 +318,23 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/CourseAssignment' }
 
+  /courses/{courseId}/student-grade/{student-id}:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+      - $ref: '#/components/parameters/StudentIdHyphenated'
+    get:
+      tags: [Grades]
+      summary: Get a student's weighted grade for a course
+      operationId: getStudentCourseGrade
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Student course grade with exam details
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StudentCourseGrade' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
   /courses/{courseId}/assignments/{assignmentId}:
     parameters:
       - $ref: '#/components/parameters/CourseId'
@@ -792,6 +809,7 @@ components:
   parameters:
     UserId: { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
     StudentId: { name: studentId, in: path, required: true, schema: { type: string, format: uuid } }
+    StudentIdHyphenated: { name: student-id, in: path, required: true, schema: { type: string, format: uuid } }
     SpecialtyId: { name: specialtyId, in: path, required: true, schema: { type: string, format: uuid } }
     CourseId: { name: courseId, in: path, required: true, schema: { type: string, format: uuid } }
     GroupId: { name: groupId, in: path, required: true, schema: { type: string, format: uuid } }
@@ -967,6 +985,25 @@ components:
         courseId: { $ref: '#/components/schemas/UUID' }
         dateExam: { type: string, format: date-time }
         coef: { type: number, minimum: 0, maximum: 99.99, multipleOf: 0.01 }
+    ExamGrade:
+      type: object
+      required: [id, courseId, coef, grade]
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        courseId: { $ref: '#/components/schemas/UUID' }
+        dateExam: { type: string, format: date-time }
+        coef: { type: number, minimum: 0, maximum: 1 }
+        grade: { type: number, minimum: 0, maximum: 20 }
+    StudentCourseGrade:
+      type: object
+      required: [user, course, exams, average]
+      properties:
+        user: { $ref: '#/components/schemas/User' }
+        course: { $ref: '#/components/schemas/Course' }
+        exams:
+          type: array
+          items: { $ref: '#/components/schemas/ExamGrade' }
+        average: { type: number, minimum: 0, maximum: 20 }
     ExamGroup:
       type: object
       required: [id, examId, groupId]

@@ -1,5 +1,6 @@
 package school.hei.demo.repository;
 
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,4 +13,6 @@ public interface GradeRepository extends JpaRepository<JGrade, UUID> {
   Page<JGrade> findAllByExam_Id(UUID examId, Pageable pageable);
 
   Page<JGrade> findAllByExam_IdAndStudent_Id(UUID examId, UUID studentId, Pageable pageable);
+
+  List<JGrade> findAllByStudent_IdAndExam_Course_Id(UUID studentId, UUID courseId);
 }
