@@ -20,4 +20,16 @@ public interface CourseRepository extends JpaRepository<JCourse, UUID> {
       """)
   Page<JCourse> findAllFiltered(
       @Param("semester") Integer semester, @Param("search") String search, Pageable pageable);
+
+  @Query(
+      """
+      SELECT c FROM JCourse c
+      WHERE c.semester BETWEEN 1 AND 3
+         OR EXISTS (
+              SELECT cs.id FROM JCourseSpecialty cs
+              WHERE cs.course.id = c.id
+                AND cs.specialty.id = :specialtyId
+         )
+      """)
+  java.util.List<JCourse> findAllForTranscript(@Param("specialtyId") java.util.UUID specialtyId);
 }
