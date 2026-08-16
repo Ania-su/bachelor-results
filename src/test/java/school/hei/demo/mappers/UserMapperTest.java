@@ -6,10 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import school.hei.demo.domain.entity.User;
 import school.hei.demo.domain.mappers.UserMapper;
+import school.hei.demo.entity.User;
 import school.hei.demo.enums.UserRole;
-import school.hei.demo.repository.entity.JUser;
+import school.hei.demo.repository.model.JUser;
 
 class UserMapperTest {
   private final UserMapper mapper = new UserMapper();

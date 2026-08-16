@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import school.hei.demo.enums.UserRole;
-import school.hei.demo.repository.entity.JUser;
+import school.hei.demo.repository.model.JUser;
 
 @Repository
 public interface UserRepository extends JpaRepository<JUser, UUID> {

@@ -1,4 +1,4 @@
-package school.hei.demo.repository.entity;
+package school.hei.demo.repository.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

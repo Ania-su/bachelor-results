@@ -1,8 +1,8 @@
 package school.hei.demo.domain.mappers;
 
 import org.springframework.stereotype.Component;
-import school.hei.demo.domain.entity.User;
-import school.hei.demo.repository.entity.JUser;
+import school.hei.demo.entity.User;
+import school.hei.demo.repository.model.JUser;
 
 @Component
 public class UserMapper {
