@@ -10,7 +10,8 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class StudentTranscriptResponse {
-  private User user;
-  private List<YearTranscriptResponse> years;
+public class YearTranscriptResponse {
+  private Integer year;
+  private List<CourseAverageResponse> courses;
+  private Double averageYear;
 }

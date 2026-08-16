@@ -1022,18 +1022,31 @@ components:
         average: { type: number, minimum: 0, maximum: 20 }
     CourseAverage:
       type: object
-      required: [course, average]
+      required: [id, reference, title, semester, credits, average]
       properties:
-        course: { $ref: '#/components/schemas/Course' }
+        id: { $ref: '#/components/schemas/UUID' }
+        reference: { type: string, maxLength: 8 }
+        title: { type: string, maxLength: 255 }
+        semester: { type: integer, minimum: 1, maximum: 6 }
+        credits: { type: integer, minimum: 0 }
         average: { type: number, minimum: 0, maximum: 20 }
     StudentTranscript:
       type: object
-      required: [user, courses]
+      required: [user, years]
       properties:
         user: { $ref: '#/components/schemas/User' }
+        years:
+          type: array
+          items: { $ref: '#/components/schemas/TranscriptYear' }
+    TranscriptYear:
+      type: object
+      required: [year, courses, averageYear]
+      properties:
+        year: { type: integer, minimum: 1, maximum: 3 }
         courses:
           type: array
           items: { $ref: '#/components/schemas/CourseAverage' }
+        averageYear: { type: number, minimum: 0, maximum: 20 }
     ExamGroup:
       type: object
       required: [id, examId, groupId]
