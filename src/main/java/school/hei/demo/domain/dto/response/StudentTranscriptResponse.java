@@ -14,4 +14,6 @@ public class StudentTranscriptResponse {
   private User user;
   private List<YearTranscriptResponse> years;
   private Boolean isOfficial;
+  private Integer totalCredits;
+  private Integer validatedCredits;
 }

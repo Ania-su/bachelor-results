@@ -90,7 +90,15 @@ public class StudentTranscriptService {
                 .filter(data -> year == null || (data.course().getSemester() + 1) / 2 == year)
                 .allMatch(CourseTranscriptData::hasAllGrades);
 
-    return new StudentTranscriptResponse(toResponse(user), years, isOfficial);
+    var totalCredits = courses.stream().mapToInt(CourseAverageResponse::getCredits).sum();
+    var validatedCredits =
+        courses.stream()
+            .filter(course -> course.getAverage() >= 10)
+            .mapToInt(CourseAverageResponse::getCredits)
+            .sum();
+
+    return new StudentTranscriptResponse(
+        toResponse(user), years, isOfficial, totalCredits, validatedCredits);
   }
 
   private record CourseTranscriptData(CourseAverageResponse course, boolean hasAllGrades) {}

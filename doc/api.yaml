@@ -1033,13 +1033,15 @@ components:
         average: { type: number, minimum: 0, maximum: 20 }
     StudentTranscript:
       type: object
-      required: [user, years, isOfficial]
+      required: [user, years, isOfficial, totalCredits, validatedCredits]
       properties:
         user: { $ref: '#/components/schemas/User' }
         years:
           type: array
           items: { $ref: '#/components/schemas/TranscriptYear' }
         isOfficial: { type: boolean }
+        totalCredits: { type: integer, minimum: 0 }
+        validatedCredits: { type: integer, minimum: 0 }
     TranscriptYear:
       type: object
       required: [year, courses, averageYear]
