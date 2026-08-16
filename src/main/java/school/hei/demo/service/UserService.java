@@ -18,7 +18,7 @@ import school.hei.demo.exception.ConflictException;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.SpecialtyRepository;
 import school.hei.demo.repository.UserRepository;
-import school.hei.demo.repository.entity.JUser;
+import school.hei.demo.repository.model.JUser;
 import school.hei.demo.validators.UserValidator;
 
 @Service
@@ -41,8 +41,8 @@ public class UserService {
     }
     ensureSpecialtyExists(request.specialtyId());
 
-    school.hei.demo.domain.entity.User user =
-        new school.hei.demo.domain.entity.User(
+    school.hei.demo.entity.User user =
+        new school.hei.demo.entity.User(
             null,
             request.reference(),
             request.firstName(),
@@ -55,7 +55,7 @@ public class UserService {
             null);
 
     JUser savedUser = userRepository.save(userMapper.toJpa(user));
-    school.hei.demo.domain.entity.User savedDomainUser = userMapper.toDomain(savedUser);
+    school.hei.demo.entity.User savedDomainUser = userMapper.toDomain(savedUser);
 
     return toResponse(savedDomainUser);
   }
@@ -138,7 +138,7 @@ public class UserService {
         .orElseThrow(() -> new NotFoundException("User not found: " + userId));
   }
 
-  private User toResponse(school.hei.demo.domain.entity.User user) {
+  private User toResponse(school.hei.demo.entity.User user) {
     return new User(
         user.getId(),
         user.getReference(),

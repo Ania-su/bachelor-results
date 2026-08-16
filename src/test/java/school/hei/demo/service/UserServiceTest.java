@@ -30,7 +30,7 @@ import school.hei.demo.exception.BadRequestException;
 import school.hei.demo.exception.ConflictException;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.UserRepository;
-import school.hei.demo.repository.entity.JUser;
+import school.hei.demo.repository.model.JUser;
 import school.hei.demo.validators.UserValidator;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,8 +61,8 @@ class UserServiceTest {
   @Test
   void shouldCreateUserAndHashPassword() {
     JUser savedJpaUser = new JUser();
-    school.hei.demo.domain.entity.User savedDomainUser =
-        new school.hei.demo.domain.entity.User(
+    school.hei.demo.entity.User savedDomainUser =
+        new school.hei.demo.entity.User(
             UUID.randomUUID(),
             request.reference(),
             request.firstName(),
@@ -104,8 +104,8 @@ class UserServiceTest {
   @Test
   void shouldFindUsersWithPaginationAndFilters() {
     JUser jUser = new JUser();
-    school.hei.demo.domain.entity.User domainUser =
-        new school.hei.demo.domain.entity.User(
+    school.hei.demo.entity.User domainUser =
+        new school.hei.demo.entity.User(
             UUID.randomUUID(),
             "REF001",
             "John",
@@ -155,7 +155,7 @@ class UserServiceTest {
   void shouldFindUserByStringUuid() {
     UUID id = UUID.randomUUID();
     JUser jUser = existingUser(id);
-    school.hei.demo.domain.entity.User domainUser = domainUser(id);
+    school.hei.demo.entity.User domainUser = domainUser(id);
     when(userValidator.validateUuid(id.toString())).thenReturn(id);
     when(userRepository.findById(id)).thenReturn(Optional.of(jUser));
     when(userMapper.toDomain(jUser)).thenReturn(domainUser);
@@ -250,8 +250,8 @@ class UserServiceTest {
     return user;
   }
 
-  private school.hei.demo.domain.entity.User domainUser(UUID id) {
-    return new school.hei.demo.domain.entity.User(
+  private school.hei.demo.entity.User domainUser(UUID id) {
+    return new school.hei.demo.entity.User(
         id,
         "REF001",
         "John",

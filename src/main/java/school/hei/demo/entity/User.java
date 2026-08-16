@@ -1,4 +1,4 @@
-package school.hei.demo.domain.entity;
+package school.hei.demo.entity;
 
 import java.time.Instant;
 import java.util.UUID;
