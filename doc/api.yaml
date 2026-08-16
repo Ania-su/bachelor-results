@@ -737,6 +737,22 @@ paths:
             application/pdf:
               schema: { type: string, format: binary }
         '403': { $ref: '#/components/responses/Forbidden' }
+         '404': { $ref: '#/components/responses/NotFound' }
+
+  /students/{studentId}/transcript:
+    get:
+      tags: [Students]
+      summary: Get a student's average grade for every course
+      operationId: getStudentTranscript
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/StudentId'
+      responses:
+        '200':
+          description: Student transcript with course averages
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StudentTranscript' }
         '404': { $ref: '#/components/responses/NotFound' }
 
   /students/{studentId}/transcript-email:
@@ -1004,6 +1020,20 @@ components:
           type: array
           items: { $ref: '#/components/schemas/ExamGrade' }
         average: { type: number, minimum: 0, maximum: 20 }
+    CourseAverage:
+      type: object
+      required: [course, average]
+      properties:
+        course: { $ref: '#/components/schemas/Course' }
+        average: { type: number, minimum: 0, maximum: 20 }
+    StudentTranscript:
+      type: object
+      required: [user, courses]
+      properties:
+        user: { $ref: '#/components/schemas/User' }
+        courses:
+          type: array
+          items: { $ref: '#/components/schemas/CourseAverage' }
     ExamGroup:
       type: object
       required: [id, examId, groupId]
