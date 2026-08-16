@@ -15,4 +15,6 @@ public interface GradeRepository extends JpaRepository<JGrade, UUID> {
   Page<JGrade> findAllByExam_IdAndStudent_Id(UUID examId, UUID studentId, Pageable pageable);
 
   List<JGrade> findAllByStudent_IdAndExam_Course_Id(UUID studentId, UUID courseId);
+
+  long countByStudent_IdAndExam_Course_Id(UUID studentId, UUID courseId);
 }

@@ -13,6 +13,7 @@ import school.hei.demo.domain.dto.response.YearTranscriptResponse;
 import school.hei.demo.domain.mappers.UserMapper;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.CourseRepository;
+import school.hei.demo.repository.GradeRepository;
 import school.hei.demo.repository.UserRepository;
 
 @Service
@@ -20,30 +21,44 @@ import school.hei.demo.repository.UserRepository;
 public class StudentTranscriptService {
   private final UserRepository userRepository;
   private final CourseRepository courseRepository;
+  private final GradeRepository gradeRepository;
   private final UserMapper userMapper;
   private final StudentCourseGradeService studentCourseGradeService;
 
   @Transactional(readOnly = true)
-  public StudentTranscriptResponse get(UUID studentId) {
+  public StudentTranscriptResponse get(UUID studentId, Integer year) {
     var user =
         userRepository
             .findById(studentId)
             .map(userMapper::toDomain)
             .orElseThrow(() -> new NotFoundException("Student " + studentId + " not found"));
 
-    var courses =
+    var courseData =
         courseRepository.findAllForTranscript(user.getSpecialtyId()).stream()
             .map(
                 course -> {
                   var courseGrade = studentCourseGradeService.get(course.getId(), studentId);
-                  return new CourseAverageResponse(
-                      courseGrade.getCourse().getId(),
-                      courseGrade.getCourse().getReference(),
-                      courseGrade.getCourse().getTitle(),
-                      courseGrade.getCourse().getSemester(),
-                      courseGrade.getCourse().getCredits(),
-                      courseGrade.getAverage());
+                  var hasAllGrades =
+                      !courseGrade.getExams().isEmpty()
+                          && gradeRepository.countByStudent_IdAndExam_Course_Id(
+                                  studentId, course.getId())
+                              == courseGrade.getExams().size();
+                  return new CourseTranscriptData(
+                      new CourseAverageResponse(
+                          courseGrade.getCourse().getId(),
+                          courseGrade.getCourse().getReference(),
+                          courseGrade.getCourse().getTitle(),
+                          courseGrade.getCourse().getSemester(),
+                          courseGrade.getCourse().getCredits(),
+                          courseGrade.getAverage()),
+                      hasAllGrades);
                 })
+            .toList();
+
+    var courses =
+        courseData.stream()
+            .filter(data -> year == null || (data.course().getSemester() + 1) / 2 == year)
+            .map(CourseTranscriptData::course)
             .sorted(Comparator.comparing(CourseAverageResponse::getSemester))
             .toList();
 
@@ -69,8 +84,16 @@ public class StudentTranscriptService {
                 })
             .toList();
 
-    return new StudentTranscriptResponse(toResponse(user), years);
+    var isOfficial =
+        !courses.isEmpty()
+            && courseData.stream()
+                .filter(data -> year == null || (data.course().getSemester() + 1) / 2 == year)
+                .allMatch(CourseTranscriptData::hasAllGrades);
+
+    return new StudentTranscriptResponse(toResponse(user), years, isOfficial);
   }
+
+  private record CourseTranscriptData(CourseAverageResponse course, boolean hasAllGrades) {}
 
   private User toResponse(school.hei.demo.entity.User user) {
     return new User(

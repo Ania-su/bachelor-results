@@ -747,6 +747,7 @@ paths:
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/StudentId'
+        - $ref: '#/components/parameters/TranscriptYear'
       responses:
         '200':
           description: Student transcript with course averages
@@ -1032,12 +1033,13 @@ components:
         average: { type: number, minimum: 0, maximum: 20 }
     StudentTranscript:
       type: object
-      required: [user, years]
+      required: [user, years, isOfficial]
       properties:
         user: { $ref: '#/components/schemas/User' }
         years:
           type: array
           items: { $ref: '#/components/schemas/TranscriptYear' }
+        isOfficial: { type: boolean }
     TranscriptYear:
       type: object
       required: [year, courses, averageYear]

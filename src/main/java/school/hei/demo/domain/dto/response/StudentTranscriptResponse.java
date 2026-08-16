@@ -13,4 +13,5 @@ import lombok.Setter;
 public class StudentTranscriptResponse {
   private User user;
   private List<YearTranscriptResponse> years;
+  private Boolean isOfficial;
 }
