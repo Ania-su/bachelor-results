@@ -676,16 +676,15 @@ paths:
       tags: [Grades]
       summary: Delete a grade with an audit record
       operationId: deleteGrade
-      description: Deletion must preserve the previous value in grade history.
+      description: Grade history is removed before the grade is deleted.
       x-roles: [TEACHER, ADMIN]
       security: [{ bearerAuth: [] }]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/GradeDelete' }
       responses:
-        '204': { description: Grade deleted and deletion audited }
+        '200':
+          description: Deleted grade
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Grade' }
         '403': { $ref: '#/components/responses/Forbidden' }
 
   /me/transcript-email:
@@ -992,21 +991,15 @@ components:
         updatedAt: { type: string, format: date-time }
     GradeCreate:
       type: object
-      required: [studentId, examId, value]
+      required: [studentId, value]
       properties:
         studentId: { $ref: '#/components/schemas/UUID' }
-        examId: { $ref: '#/components/schemas/UUID' }
         value: { type: number, minimum: 0, maximum: 20, multipleOf: 0.01 }
     GradeUpdate:
       type: object
       required: [value, reason]
       properties:
         value: { type: number, minimum: 0, maximum: 20, multipleOf: 0.01 }
-        reason: { type: string, minLength: 1, maxLength: 255 }
-    GradeDelete:
-      type: object
-      required: [reason]
-      properties:
         reason: { type: string, minLength: 1, maxLength: 255 }
     GradeHistory:
       type: object
