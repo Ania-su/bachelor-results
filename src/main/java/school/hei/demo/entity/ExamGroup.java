@@ -1,7 +1,7 @@
 package school.hei.demo.entity;
 
-import lombok.*;
 import java.util.UUID;
+import lombok.*;
 
 @Getter
 @Setter
@@ -11,8 +11,8 @@ import java.util.UUID;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ExamGroup {
 
-    @EqualsAndHashCode.Include private UUID id;
+  @EqualsAndHashCode.Include private UUID id;
 
-    private UUID examId;
-    private UUID groupId;
+  private UUID examId;
+  private UUID groupId;
 }

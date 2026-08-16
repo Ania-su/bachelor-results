@@ -11,24 +11,24 @@ import school.hei.demo.repository.model.JExamGroup;
 @AllArgsConstructor
 public class ExamGroupMapper {
 
-    private final ExamRepository examRepository;
-    private final GroupRepository groupRepository;
+  private final ExamRepository examRepository;
+  private final GroupRepository groupRepository;
 
-    public ExamGroup toDomain(JExamGroup j) {
-        if (j == null) return null;
-        return ExamGroup.builder()
-                .id(j.getId())
-                .examId(j.getExam().getId())
-                .groupId(j.getGroup().getId())
-                .build();
-    }
+  public ExamGroup toDomain(JExamGroup j) {
+    if (j == null) return null;
+    return ExamGroup.builder()
+        .id(j.getId())
+        .examId(j.getExam().getId())
+        .groupId(j.getGroup().getId())
+        .build();
+  }
 
-    public JExamGroup toEntity(ExamGroup eg) {
-        if (eg == null) return null;
-        return JExamGroup.builder()
-                .id(eg.getId())
-                .exam(examRepository.getReferenceById(eg.getExamId()))
-                .group(groupRepository.getReferenceById(eg.getGroupId()))
-                .build();
-    }
+  public JExamGroup toEntity(ExamGroup eg) {
+    if (eg == null) return null;
+    return JExamGroup.builder()
+        .id(eg.getId())
+        .exam(examRepository.getReferenceById(eg.getExamId()))
+        .group(groupRepository.getReferenceById(eg.getGroupId()))
+        .build();
+  }
 }

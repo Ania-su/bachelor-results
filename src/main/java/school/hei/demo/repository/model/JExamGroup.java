@@ -14,16 +14,13 @@ import lombok.*;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class JExamGroup {
 
-    @Id
-    @GeneratedValue
-    @EqualsAndHashCode.Include
-    private UUID id;
+  @Id @GeneratedValue @EqualsAndHashCode.Include private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_exam", nullable = false)
-    private JExam exam;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "id_exam", nullable = false)
+  private JExam exam;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_group", nullable = false)
-    private JGroup group;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "id_group", nullable = false)
+  private JGroup group;
 }

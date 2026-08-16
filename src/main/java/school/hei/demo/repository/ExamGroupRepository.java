@@ -7,5 +7,5 @@ import school.hei.demo.repository.model.JExamGroup;
 
 public interface ExamGroupRepository extends JpaRepository<JExamGroup, UUID> {
 
-    List<JExamGroup> findAllByExam_Id(UUID examId);
+  List<JExamGroup> findAllByExam_Id(UUID examId);
 }

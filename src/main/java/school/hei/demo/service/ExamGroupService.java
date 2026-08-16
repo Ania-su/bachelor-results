@@ -14,36 +14,38 @@ import school.hei.demo.validators.ExamGroupValidator;
 @AllArgsConstructor
 public class ExamGroupService {
 
-    private final ExamGroupRepository repository;
-    private final ExamGroupMapper mapper;
-    private final ExamGroupValidator validator;
+  private final ExamGroupRepository repository;
+  private final ExamGroupMapper mapper;
+  private final ExamGroupValidator validator;
 
-    public List<ExamGroup> listForExam(UUID examId) {
-        return repository.findAllByExam_Id(examId).stream().map(mapper::toDomain).toList();
-    }
+  public List<ExamGroup> listForExam(UUID examId) {
+    return repository.findAllByExam_Id(examId).stream().map(mapper::toDomain).toList();
+  }
 
-    public ExamGroup get(UUID examId, UUID examGroupId) {
-        var examGroup = repository.findById(examGroupId)
-                .map(mapper::toDomain)
-                .orElseThrow(() -> new NotFoundException("ExamGroup " + examGroupId + " not found"));
-        ensureBelongsToExam(examGroup, examId);
-        return examGroup;
-    }
+  public ExamGroup get(UUID examId, UUID examGroupId) {
+    var examGroup =
+        repository
+            .findById(examGroupId)
+            .map(mapper::toDomain)
+            .orElseThrow(() -> new NotFoundException("ExamGroup " + examGroupId + " not found"));
+    ensureBelongsToExam(examGroup, examId);
+    return examGroup;
+  }
 
-    public ExamGroup create(UUID examId, ExamGroup examGroup) {
-        examGroup.setExamId(examId);
-        validator.validate(examGroup);
-        return mapper.toDomain(repository.save(mapper.toEntity(examGroup)));
-    }
+  public ExamGroup create(UUID examId, ExamGroup examGroup) {
+    examGroup.setExamId(examId);
+    validator.validate(examGroup);
+    return mapper.toDomain(repository.save(mapper.toEntity(examGroup)));
+  }
 
-    public void delete(UUID examId, UUID examGroupId) {
-        var examGroup = get(examId, examGroupId);
-        repository.deleteById(examGroup.getId());
-    }
+  public void delete(UUID examId, UUID examGroupId) {
+    var examGroup = get(examId, examGroupId);
+    repository.deleteById(examGroup.getId());
+  }
 
-    private void ensureBelongsToExam(ExamGroup examGroup, UUID examId) {
-        if (!examGroup.getExamId().equals(examId)) {
-            throw new NotFoundException("ExamGroup not found for this exam");
-        }
+  private void ensureBelongsToExam(ExamGroup examGroup, UUID examId) {
+    if (!examGroup.getExamId().equals(examId)) {
+      throw new NotFoundException("ExamGroup not found for this exam");
     }
+  }
 }

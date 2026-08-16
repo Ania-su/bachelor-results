@@ -16,34 +16,35 @@ import school.hei.demo.service.ExamGroupService;
 @AllArgsConstructor
 public class ExamGroupController {
 
-    private final ExamGroupService service;
-    private final ExamGroupRestMapper mapper;
+  private final ExamGroupService service;
+  private final ExamGroupRestMapper mapper;
 
-    @GetMapping
-    public ResponseEntity<List<ExamGroupResponse>> listExamGroups(
-            @PathVariable UUID courseId, @PathVariable UUID examId) {
-        var body = service.listForExam(examId).stream().map(mapper::toResponse).toList();
-        return ResponseEntity.ok(body);
-    }
+  @GetMapping
+  public ResponseEntity<List<ExamGroupResponse>> listExamGroups(
+      @PathVariable UUID courseId, @PathVariable UUID examId) {
+    var body = service.listForExam(examId).stream().map(mapper::toResponse).toList();
+    return ResponseEntity.ok(body);
+  }
 
-    @GetMapping("/{examGroupId}")
-    public ResponseEntity<ExamGroupResponse> getExamGroup(
-            @PathVariable UUID courseId, @PathVariable UUID examId, @PathVariable UUID examGroupId) {
-        return ResponseEntity.ok(mapper.toResponse(service.get(examId, examGroupId)));
-    }
+  @GetMapping("/{examGroupId}")
+  public ResponseEntity<ExamGroupResponse> getExamGroup(
+      @PathVariable UUID courseId, @PathVariable UUID examId, @PathVariable UUID examGroupId) {
+    return ResponseEntity.ok(mapper.toResponse(service.get(examId, examGroupId)));
+  }
 
-    @PostMapping
-    public ResponseEntity<ExamGroupResponse> createExamGroup(
-            @PathVariable UUID courseId, @PathVariable UUID examId,
-            @RequestBody ExamGroupRequest request) {
-        var created = mapper.toResponse(service.create(examId, mapper.toDomain(request)));
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
+  @PostMapping
+  public ResponseEntity<ExamGroupResponse> createExamGroup(
+      @PathVariable UUID courseId,
+      @PathVariable UUID examId,
+      @RequestBody ExamGroupRequest request) {
+    var created = mapper.toResponse(service.create(examId, mapper.toDomain(request)));
+    return ResponseEntity.status(HttpStatus.CREATED).body(created);
+  }
 
-    @DeleteMapping("/{examGroupId}")
-    public ResponseEntity<Void> deleteExamGroup(
-            @PathVariable UUID courseId, @PathVariable UUID examId, @PathVariable UUID examGroupId) {
-        service.delete(examId, examGroupId);
-        return ResponseEntity.noContent().build();
-    }
+  @DeleteMapping("/{examGroupId}")
+  public ResponseEntity<Void> deleteExamGroup(
+      @PathVariable UUID courseId, @PathVariable UUID examId, @PathVariable UUID examGroupId) {
+    service.delete(examId, examGroupId);
+    return ResponseEntity.noContent().build();
+  }
 }
