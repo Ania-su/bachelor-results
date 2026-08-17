@@ -17,7 +17,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import school.hei.demo.conf.FacadeIT;
+import school.hei.demo.conf.TestAuthentication;
 import school.hei.demo.domain.dto.response.GraduateResponse;
 import school.hei.demo.domain.dto.response.PromotionDownloadResponse;
 import school.hei.demo.enums.CodeType;
@@ -34,6 +36,7 @@ class PromotionIT extends FacadeIT {
   @Autowired ExamRepository examRepository;
   @Autowired UserRepository userRepository;
   @Autowired GradeRepository gradeRepository;
+  @Autowired PasswordEncoder passwordEncoder;
 
   @MockBean BucketComponent bucketComponent;
 
@@ -42,6 +45,8 @@ class PromotionIT extends FacadeIT {
     restTemplate
         .getRestTemplate()
         .setRequestFactory(new JdkClientHttpRequestFactory(HttpClient.newHttpClient()));
+    TestAuthentication.configure(
+        restTemplate, userRepository, specialtyRepository, passwordEncoder);
   }
 
   @Test
