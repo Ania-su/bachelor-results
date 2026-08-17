@@ -9,5 +9,7 @@ public interface CourseAssignmentRepository extends JpaRepository<JCourseAssignm
 
   List<JCourseAssignment> findAllByCourse_Id(UUID courseId);
 
+  boolean existsByCourse_IdAndTeacherId(UUID courseId, UUID teacherId);
+
   boolean existsByCourse_IdAndTeacherIdAndGroup_Id(UUID courseId, UUID teacherId, UUID groupId);
 }

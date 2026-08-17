@@ -38,6 +38,9 @@ public class SecurityConfig {
                     .hasRole("ADMIN")
                     .requestMatchers(HttpMethod.GET, "/specialties", "/specialties/**")
                     .hasAnyRole("ADMIN", "TEACHER")
+                    .requestMatchers(
+                        HttpMethod.GET, "/courses/*/assignments", "/courses/*/assignments/**")
+                    .hasAnyRole("ADMIN", "TEACHER")
                     .requestMatchers(HttpMethod.GET, "/courses", "/courses/**")
                     .hasAnyRole("ADMIN", "TEACHER", "STUDENT")
                     .anyRequest()
