@@ -31,6 +31,11 @@ public class GlobalExceptionHandler {
     return build(HttpStatus.FORBIDDEN, e.getMessage());
   }
 
+  @ExceptionHandler(UnauthorizedException.class)
+  public ResponseEntity<ApiError> handleUnauthorizedException(UnauthorizedException e) {
+    return build(HttpStatus.UNAUTHORIZED, e.getMessage());
+  }
+
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
   public ResponseEntity<ApiError> handleMethodArgumentTypeMismatchException(
       MethodArgumentTypeMismatchException e) {
