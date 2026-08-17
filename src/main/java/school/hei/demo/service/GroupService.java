@@ -1,5 +1,6 @@
 package school.hei.demo.service;
 
+import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,10 @@ public class GroupService {
   private final GroupMapper mapper;
   private final GroupValidator validator;
   private final PaginationValidator paginationValidator;
+
+  public List<Group> listAll() {
+    return repository.findAll().stream().map(mapper::toDomain).toList();
+  }
 
   public Page<Group> list(Integer academicYear, int page, int pageSize) {
     paginationValidator.validate(page, pageSize);
