@@ -3,6 +3,7 @@ package school.hei.demo.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -26,7 +27,17 @@ public class SecurityConfig {
                 sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
             authorize ->
-                authorize.requestMatchers("/auth/login").permitAll().anyRequest().authenticated())
+                authorize
+                    .requestMatchers("/auth/login")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/users")
+                    .hasAnyRole("ADMIN", "TEACHER")
+                    .requestMatchers(HttpMethod.GET, "/users/*")
+                    .hasAnyRole("ADMIN", "TEACHER", "STUDENT")
+                    .requestMatchers("/users/**")
+                    .hasRole("ADMIN")
+                    .anyRequest()
+                    .hasRole("ADMIN"))
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
