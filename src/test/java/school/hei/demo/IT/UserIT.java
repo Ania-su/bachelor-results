@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import school.hei.demo.conf.FacadeIT;
 import school.hei.demo.conf.TestAuthentication;
 import school.hei.demo.domain.dto.request.UserCreate;
@@ -24,9 +25,8 @@ import school.hei.demo.domain.dto.request.UserUpdate;
 import school.hei.demo.domain.dto.response.User;
 import school.hei.demo.domain.dto.response.UserPage;
 import school.hei.demo.enums.UserRole;
-import school.hei.demo.repository.UserRepository;
 import school.hei.demo.repository.SpecialtyRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import school.hei.demo.repository.UserRepository;
 
 class UserIT extends FacadeIT {
   @Autowired TestRestTemplate restTemplate;
@@ -41,7 +41,8 @@ class UserIT extends FacadeIT {
     restTemplate
         .getRestTemplate()
         .setRequestFactory(new JdkClientHttpRequestFactory(HttpClient.newHttpClient()));
-    TestAuthentication.configure(restTemplate, userRepository, specialtyRepository, passwordEncoder);
+    TestAuthentication.configure(
+        restTemplate, userRepository, specialtyRepository, passwordEncoder);
   }
 
   @Test

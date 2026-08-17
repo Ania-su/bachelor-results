@@ -26,8 +26,10 @@ public final class TestAuthentication {
       UserRepository userRepository,
       SpecialtyRepository specialtyRepository,
       PasswordEncoder passwordEncoder) {
-    JUser user = userRepository.findByEmailIgnoreCase(EMAIL).orElseGet(() -> createUser(
-        userRepository, specialtyRepository, passwordEncoder));
+    JUser user =
+        userRepository
+            .findByEmailIgnoreCase(EMAIL)
+            .orElseGet(() -> createUser(userRepository, specialtyRepository, passwordEncoder));
 
     HttpHeaders loginHeaders = new HttpHeaders();
     loginHeaders.setContentType(MediaType.APPLICATION_JSON);
