@@ -5,8 +5,8 @@ info:
   description: |
     First draft of the role-based school grading API.
 
-    Authorization is enforced by the service layer. The x-roles extension
-    documents the intended minimum role for each operation.
+    Authorization is enforced by the security configuration and service layer.
+    The x-roles extension documents the roles allowed for each operation.
 servers:
   - url: https://api.example.com/v1
     description: Production
@@ -52,7 +52,7 @@ paths:
       tags: [Users]
       summary: List users
       operationId: listUsers
-      x-roles: [ADMIN]
+      x-roles: [ADMIN, TEACHER]
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/Page'
@@ -95,7 +95,8 @@ paths:
       tags: [Users]
       summary: Get a user
       operationId: getUser
-      x-roles: [ADMIN]
+      x-roles: [ADMIN, TEACHER, STUDENT]
+      description: Students may access only their own user record.
       security: [{ bearerAuth: [] }]
       responses:
         '200':
@@ -137,6 +138,7 @@ paths:
       tags: [Specialties]
       summary: List specialties
       operationId: listSpecialties
+      x-roles: [ADMIN, TEACHER]
       security: [{ bearerAuth: [] }]
       responses:
         '200':
@@ -171,6 +173,7 @@ paths:
       tags: [Specialties]
       summary: Get a specialty
       operationId: getSpecialty
+      x-roles: [ADMIN, TEACHER]
       security: [{ bearerAuth: [] }]
       responses:
         '200':
@@ -210,6 +213,7 @@ paths:
       tags: [Courses]
       summary: List courses
       operationId: listCourses
+      x-roles: [ADMIN, TEACHER, STUDENT]
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/Page'
@@ -249,6 +253,7 @@ paths:
       tags: [Courses]
       summary: Get a course
       operationId: getCourse
+      x-roles: [ADMIN, TEACHER, STUDENT]
       security: [{ bearerAuth: [] }]
       responses:
         '200':
@@ -290,6 +295,8 @@ paths:
       tags: [Course assignments]
       summary: List assignments for a course
       operationId: listAssignmentsForCourse
+      x-roles: [ADMIN, TEACHER]
+      description: Teachers may access assignments only for courses to which they are assigned.
       security: [{ bearerAuth: [] }]
       responses:
         '200':
@@ -326,6 +333,7 @@ paths:
       tags: [Grades]
       summary: Get a student's weighted grade for a course
       operationId: getStudentCourseGrade
+      x-roles: [ADMIN, TEACHER, STUDENT]
       security: [{ bearerAuth: [] }]
       responses:
         '200':
@@ -343,6 +351,8 @@ paths:
       tags: [Course assignments]
       summary: Get a course assignment
       operationId: getCourseAssignment
+      x-roles: [ADMIN, TEACHER]
+      description: Teachers may access assignments only for courses to which they are assigned.
       security: [{ bearerAuth: [] }]
       responses:
         '200':
@@ -381,6 +391,7 @@ paths:
       tags: [Groups]
       summary: List student groups
       operationId: listGroups
+      x-roles: [ADMIN, TEACHER]
       security: [{ bearerAuth: [] }]
       parameters:
         - name: academicYear
@@ -419,6 +430,7 @@ paths:
       tags: [Groups]
       summary: Get a group
       operationId: getGroup
+      x-roles: [ADMIN, TEACHER]
       security: [{ bearerAuth: [] }]
       responses:
         '200':
@@ -459,6 +471,7 @@ paths:
       tags: [Groups]
       summary: List students currently associated with a group
       operationId: listStudentsForGroup
+      x-roles: [ADMIN, TEACHER]
       security: [{ bearerAuth: [] }]
       responses:
         '200':
@@ -476,6 +489,10 @@ paths:
       tags: [Exams]
       summary: List exams for a course
       operationId: listExamsForCourse
+      x-roles: [ADMIN, TEACHER, STUDENT]
+      description: >
+        Teachers may access exams only for courses to which they are assigned.
+        Students may access only exams allowed by their specialty and entry year.
       security: [{ bearerAuth: [] }]
       responses:
         '200':
@@ -513,6 +530,10 @@ paths:
       tags: [Exams]
       summary: Get an exam
       operationId: getExam
+      x-roles: [ADMIN, TEACHER, STUDENT]
+      description: >
+        Teachers may access exams only for courses to which they are assigned.
+        Students may access only exams allowed by their specialty and entry year.
       security: [{ bearerAuth: [] }]
       responses:
         '200':
@@ -554,6 +575,10 @@ paths:
       tags: [Exam groups]
       summary: List groups taking an exam
       operationId: listGroupsForExam
+      x-roles: [ADMIN, TEACHER, STUDENT]
+      description: >
+        Access follows the permissions of the parent exam. Teachers must be assigned
+        to the course, and students must satisfy the parent exam access rules.
       security: [{ bearerAuth: [] }]
       responses:
         '200':
@@ -591,6 +616,10 @@ paths:
       tags: [Exam groups]
       summary: Get an exam-group link
       operationId: getExamGroup
+      x-roles: [ADMIN, TEACHER, STUDENT]
+      description: >
+        Access follows the permissions of the parent exam. Teachers must be assigned
+        to the course, and students must satisfy the parent exam access rules.
       security: [{ bearerAuth: [] }]
       responses:
         '200':
@@ -709,7 +738,7 @@ paths:
       tags: [Students]
       summary: Download the authenticated student's transcript
       operationId: downloadMyTranscript
-      x-roles: [STUDENT, ADMIN]
+      x-roles: [STUDENT]
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/TranscriptYear'
@@ -725,7 +754,7 @@ paths:
       tags: [Students]
       summary: Download a student's transcript
       operationId: downloadStudentTranscript
-      x-roles: [STUDENT, ADMIN]
+      x-roles: [ADMIN]
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/StudentId'
