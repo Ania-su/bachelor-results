@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,10 +19,19 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import school.hei.demo.domain.mappers.ExamMapper;
 import school.hei.demo.entity.Exam;
+import school.hei.demo.entity.User;
+import school.hei.demo.enums.CodeType;
+import school.hei.demo.enums.UserRole;
+import school.hei.demo.exception.ForbiddenException;
 import school.hei.demo.exception.NotFoundException;
+import school.hei.demo.repository.CourseAssignmentRepository;
+import school.hei.demo.repository.CourseSpecialtyRepository;
 import school.hei.demo.repository.ExamRepository;
+import school.hei.demo.repository.SpecialtyRepository;
 import school.hei.demo.repository.model.JCourse;
+import school.hei.demo.repository.model.JCourseSpecialty;
 import school.hei.demo.repository.model.JExam;
+import school.hei.demo.repository.model.JSpecialty;
 import school.hei.demo.validators.ExamValidator;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,7 +39,19 @@ class ExamServiceTest {
   @Mock ExamRepository repository;
   @Mock ExamMapper mapper;
   @Mock ExamValidator validator;
+  @Mock CurrentUserService currentUserService;
+  @Mock CourseAssignmentRepository courseAssignmentRepository;
+  @Mock CourseSpecialtyRepository courseSpecialtyRepository;
+  @Mock SpecialtyRepository specialtyRepository;
   @InjectMocks ExamService service;
+
+  @BeforeEach
+  void setUpAuthenticatedAdmin() {
+    var admin = new User();
+    admin.setId(UUID.randomUUID());
+    admin.setUserRole(UserRole.ADMIN);
+    when(currentUserService.getCurrentUser()).thenReturn(admin);
+  }
 
   @Test
   void shouldListExamsForCourse() {
@@ -80,6 +102,62 @@ class ExamServiceTest {
         .thenReturn(new Exam(examId, otherCourseId, Instant.now(), BigDecimal.ONE));
     assertThrows(NotFoundException.class, () -> service.get(courseId, examId));
     assertThrows(NotFoundException.class, () -> service.delete(courseId, examId));
+  }
+
+  @Test
+  void shouldRejectUnassignedTeacher() {
+    UUID courseId = UUID.randomUUID();
+    var teacher = new User();
+    teacher.setId(UUID.randomUUID());
+    teacher.setUserRole(UserRole.TEACHER);
+    when(currentUserService.getCurrentUser()).thenReturn(teacher);
+    when(courseAssignmentRepository.existsByCourse_IdAndTeacherId(courseId, teacher.getId()))
+        .thenReturn(false);
+
+    assertThrows(ForbiddenException.class, () -> service.listForCourse(courseId));
+  }
+
+  @Test
+  void shouldFilterStudentExamsBySpecialtyAndEntryYear() {
+    UUID courseId = UUID.randomUUID();
+    UUID specialtyId = UUID.randomUUID();
+    var student = new User();
+    student.setId(UUID.randomUUID());
+    student.setUserRole(UserRole.STUDENT);
+    student.setSpecialtyId(specialtyId);
+    student.setEntryYear(2024);
+    when(currentUserService.getCurrentUser()).thenReturn(student);
+    when(specialtyRepository.findById(specialtyId))
+        .thenReturn(Optional.of(JSpecialty.builder().id(specialtyId).code(CodeType.EL).build()));
+    when(courseSpecialtyRepository.findByCourseId(courseId))
+        .thenReturn(
+            List.of(
+                JCourseSpecialty.builder()
+                    .course(JCourse.builder().id(courseId).build())
+                    .specialty(JSpecialty.builder().code(CodeType.NONE).build())
+                    .build()));
+
+    JExam allowedEntity =
+        JExam.builder()
+            .id(UUID.randomUUID())
+            .course(JCourse.builder().id(courseId).build())
+            .build();
+    JExam oldEntity =
+        JExam.builder()
+            .id(UUID.randomUUID())
+            .course(JCourse.builder().id(courseId).build())
+            .build();
+    Exam allowed =
+        new Exam(
+            allowedEntity.getId(), courseId, Instant.parse("2024-01-01T00:00:00Z"), BigDecimal.ONE);
+    Exam old =
+        new Exam(
+            oldEntity.getId(), courseId, Instant.parse("2023-12-31T23:59:59Z"), BigDecimal.ONE);
+    when(repository.findAllByCourse_Id(courseId)).thenReturn(List.of(allowedEntity, oldEntity));
+    when(mapper.toDomain(allowedEntity)).thenReturn(allowed);
+    when(mapper.toDomain(oldEntity)).thenReturn(old);
+
+    assertEquals(List.of(allowed), service.listForCourse(courseId));
   }
 
   private Exam validExam() {

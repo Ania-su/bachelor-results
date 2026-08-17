@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -16,6 +17,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import school.hei.demo.domain.mappers.CourseAssignmentMapper;
 import school.hei.demo.entity.CourseAssignment;
+import school.hei.demo.entity.User;
+import school.hei.demo.enums.UserRole;
+import school.hei.demo.exception.ForbiddenException;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.CourseAssignmentRepository;
 import school.hei.demo.repository.model.JCourse;
@@ -28,7 +32,16 @@ class CourseAssignmentServiceTest {
   @Mock CourseAssignmentRepository repository;
   @Mock CourseAssignmentMapper mapper;
   @Mock CourseAssignmentValidator validator;
+  @Mock CurrentUserService currentUserService;
   @InjectMocks CourseAssignmentService service;
+
+  @BeforeEach
+  void setUpAuthenticatedAdmin() {
+    var admin = new User();
+    admin.setId(UUID.randomUUID());
+    admin.setUserRole(UserRole.ADMIN);
+    when(currentUserService.getCurrentUser()).thenReturn(admin);
+  }
 
   @Test
   void shouldListAssignmentsForCourse() {
@@ -90,5 +103,17 @@ class CourseAssignmentServiceTest {
 
   private CourseAssignment validAssignment() {
     return new CourseAssignment(null, null, UUID.randomUUID(), UUID.randomUUID());
+  }
+
+  @Test
+  void shouldRejectUnassignedTeacherFromReadingAssignments() {
+    UUID courseId = UUID.randomUUID();
+    var teacher = new User();
+    teacher.setId(UUID.randomUUID());
+    teacher.setUserRole(UserRole.TEACHER);
+    when(currentUserService.getCurrentUser()).thenReturn(teacher);
+    when(repository.existsByCourse_IdAndTeacherId(courseId, teacher.getId())).thenReturn(false);
+
+    assertThrows(ForbiddenException.class, () -> service.listForCourse(courseId));
   }
 }
