@@ -12,8 +12,12 @@ import school.hei.demo.domain.dto.response.GradeResponse;
 import school.hei.demo.domain.mappers.GradeMapper;
 import school.hei.demo.endpoint.rest.controller.mapper.GradeRestMapper;
 import school.hei.demo.entity.Grade;
+import school.hei.demo.entity.User;
+import school.hei.demo.enums.UserRole;
 import school.hei.demo.exception.BadRequestException;
+import school.hei.demo.exception.ForbiddenException;
 import school.hei.demo.exception.NotFoundException;
+import school.hei.demo.repository.CourseAssignmentRepository;
 import school.hei.demo.repository.ExamRepository;
 import school.hei.demo.repository.GradeHistoryRepository;
 import school.hei.demo.repository.GradeRepository;
@@ -25,13 +29,12 @@ import school.hei.demo.validators.PaginationValidator;
 @Service
 @AllArgsConstructor
 public class GradeService {
-  private static final UUID INITIAL_GRADE_USER_ID =
-      UUID.fromString("2d4149bf-c264-464e-b6a4-a364275df2ec");
-
   private final GradeRepository repository;
   private final GradeHistoryRepository historyRepository;
   private final ExamRepository examRepository;
+  private final CourseAssignmentRepository courseAssignmentRepository;
   private final UserRepository userRepository;
+  private final CurrentUserService currentUserService;
   private final GradeMapper mapper;
   private final GradeRestMapper restMapper;
   private final GradeValidator validator;
@@ -39,6 +42,14 @@ public class GradeService {
 
   @Transactional(readOnly = true)
   public GradePage list(UUID courseId, UUID examId, UUID studentId, int page, int pageSize) {
+    User currentUser = ensureReadAccess(courseId);
+
+    if (currentUser.getUserRole() == UserRole.STUDENT) {
+      if (studentId != null && !studentId.equals(currentUser.getId())) {
+        throw new ForbiddenException("Students can only access their own grades");
+      }
+      studentId = currentUser.getId();
+    }
 
     paginationValidator.validate(page, pageSize);
 
@@ -64,6 +75,8 @@ public class GradeService {
 
   @Transactional(readOnly = true)
   public GradeResponse get(UUID courseId, UUID examId, UUID gradeId) {
+    User currentUser = ensureReadAccess(courseId);
+
     var grade =
         repository
             .findById(gradeId)
@@ -71,12 +84,17 @@ public class GradeService {
             .orElseThrow(() -> new NotFoundException("Grade " + gradeId + " not found"));
 
     ensureGradeBelongsToExam(courseId, examId, grade);
+    if (currentUser.getUserRole() == UserRole.STUDENT
+        && !currentUser.getId().equals(grade.getStudentId())) {
+      throw new ForbiddenException("Students can only access their own grades");
+    }
 
     return restMapper.toResponse(grade);
   }
 
   @Transactional
   public GradeResponse create(UUID courseId, UUID examId, GradeCreate request) {
+    ensureWriteAccess(courseId);
     validator.validateCreate(request);
 
     var grade = restMapper.toDomain(request);
@@ -100,7 +118,7 @@ public class GradeService {
             .oldValue(java.math.BigDecimal.ZERO)
             .newValue(createdGrade.getValue())
             .reason("Initial grade")
-            .changedBy(INITIAL_GRADE_USER_ID)
+            .changedBy(currentUserService.getCurrentUser().getId())
             .changedAt(Instant.now())
             .build());
 
@@ -109,6 +127,7 @@ public class GradeService {
 
   @Transactional
   public GradeResponse update(UUID courseId, UUID examId, UUID gradeId, GradeUpdate request) {
+    ensureWriteAccess(courseId);
 
     validator.validateUpdate(request);
 
@@ -128,7 +147,7 @@ public class GradeService {
             .newValue(request.getValue())
             .reason(request.getReason())
             .changedAt(now)
-            .changedBy(INITIAL_GRADE_USER_ID)
+            .changedBy(currentUserService.getCurrentUser().getId())
             .build());
 
     currentGrade.setValue(request.getValue());
@@ -137,17 +156,41 @@ public class GradeService {
   }
 
   @Transactional
-  public GradeResponse delete(UUID gradeId) {
+  public GradeResponse delete(UUID courseId, UUID examId, UUID gradeId) {
+    ensureWriteAccess(courseId);
+
     var grade =
         repository
             .findById(gradeId)
             .map(mapper::toDomain)
             .orElseThrow(() -> new NotFoundException("Grade " + gradeId + " not found"));
+    ensureGradeBelongsToExam(courseId, examId, grade);
 
     historyRepository.deleteAllByGradeId(gradeId);
     repository.deleteById(gradeId);
 
     return restMapper.toResponse(grade);
+  }
+
+  private User ensureReadAccess(UUID courseId) {
+    User currentUser = currentUserService.getCurrentUser();
+    ensureTeacherAssigned(currentUser, courseId);
+    return currentUser;
+  }
+
+  private void ensureWriteAccess(UUID courseId) {
+    User currentUser = currentUserService.getCurrentUser();
+    if (currentUser.getUserRole() == UserRole.STUDENT) {
+      throw new ForbiddenException("Students have read-only access to grades");
+    }
+    ensureTeacherAssigned(currentUser, courseId);
+  }
+
+  private void ensureTeacherAssigned(User user, UUID courseId) {
+    if (user.getUserRole() == UserRole.TEACHER
+        && !courseAssignmentRepository.existsByCourse_IdAndTeacherId(courseId, user.getId())) {
+      throw new ForbiddenException("Teacher is not assigned to this course");
+    }
   }
 
   private void ensureExamBelongsToCourse(UUID courseId, UUID examId) {

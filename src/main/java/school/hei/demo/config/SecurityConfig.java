@@ -3,6 +3,7 @@ package school.hei.demo.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -26,7 +27,44 @@ public class SecurityConfig {
                 sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
             authorize ->
-                authorize.requestMatchers("/auth/login").permitAll().anyRequest().authenticated())
+                authorize
+                    .requestMatchers("/auth/login")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/users")
+                    .hasAnyRole("ADMIN", "TEACHER")
+                    .requestMatchers(HttpMethod.GET, "/users/*")
+                    .hasAnyRole("ADMIN", "TEACHER", "STUDENT")
+                    .requestMatchers("/users/**")
+                    .hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.GET, "/specialties", "/specialties/**")
+                    .hasAnyRole("ADMIN", "TEACHER")
+                    .requestMatchers(
+                        HttpMethod.GET, "/courses/*/assignments", "/courses/*/assignments/**")
+                    .hasAnyRole("ADMIN", "TEACHER")
+                    .requestMatchers(
+                        HttpMethod.GET, "/courses/*/exams/*/grades", "/courses/*/exams/*/grades/**")
+                    .hasAnyRole("ADMIN", "TEACHER", "STUDENT")
+                    .requestMatchers("/courses/*/exams/*/grades", "/courses/*/exams/*/grades/**")
+                    .hasAnyRole("ADMIN", "TEACHER")
+                    .requestMatchers(
+                        HttpMethod.GET, "/courses/*/exams/*/groups", "/courses/*/exams/*/groups/**")
+                    .hasAnyRole("ADMIN", "TEACHER", "STUDENT")
+                    .requestMatchers("/courses/*/exams/*/groups", "/courses/*/exams/*/groups/**")
+                    .hasAnyRole("ADMIN", "TEACHER")
+                    .requestMatchers(HttpMethod.GET, "/courses/*/exams", "/courses/*/exams/**")
+                    .hasAnyRole("ADMIN", "TEACHER", "STUDENT")
+                    .requestMatchers("/courses/*/exams", "/courses/*/exams/**")
+                    .hasAnyRole("ADMIN", "TEACHER")
+                    .requestMatchers(HttpMethod.GET, "/courses", "/courses/**")
+                    .hasAnyRole("ADMIN", "TEACHER", "STUDENT")
+                    .requestMatchers(HttpMethod.GET, "/groups", "/groups/**")
+                    .hasAnyRole("ADMIN", "TEACHER")
+                    .requestMatchers(HttpMethod.GET, "/me/transcript-email")
+                    .hasRole("STUDENT")
+                    .requestMatchers(HttpMethod.GET, "/students/*/transcript")
+                    .hasRole("ADMIN")
+                    .anyRequest()
+                    .hasRole("ADMIN"))
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();

@@ -62,7 +62,7 @@ class GradeControllerTest {
     when(service.create(any(), any(), any())).thenReturn(response);
     when(service.get(courseId, examId, gradeId)).thenReturn(response);
     when(service.update(any(), any(), any(), any())).thenReturn(response);
-    when(service.delete(gradeId)).thenReturn(response);
+    when(service.delete(courseId, examId, gradeId)).thenReturn(response);
 
     mockMvc
         .perform(

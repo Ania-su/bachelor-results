@@ -28,6 +28,7 @@ import school.hei.demo.domain.mappers.UserMapper;
 import school.hei.demo.enums.UserRole;
 import school.hei.demo.exception.BadRequestException;
 import school.hei.demo.exception.ConflictException;
+import school.hei.demo.exception.ForbiddenException;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.UserRepository;
 import school.hei.demo.repository.model.JUser;
@@ -40,6 +41,7 @@ class UserServiceTest {
   @Mock PasswordEncoder passwordEncoder;
   @Mock UserValidator userValidator;
   @Mock school.hei.demo.repository.SpecialtyRepository specialtyRepository;
+  @Mock CurrentUserService currentUserService;
   @InjectMocks UserService userService;
 
   private UserCreate request;
@@ -159,6 +161,10 @@ class UserServiceTest {
     when(userValidator.validateUuid(id.toString())).thenReturn(id);
     when(userRepository.findById(id)).thenReturn(Optional.of(jUser));
     when(userMapper.toDomain(jUser)).thenReturn(domainUser);
+    var admin = new school.hei.demo.entity.User();
+    admin.setId(UUID.randomUUID());
+    admin.setUserRole(UserRole.ADMIN);
+    when(currentUserService.getCurrentUser()).thenReturn(admin);
 
     User result = userService.findById(id.toString());
 
@@ -173,6 +179,21 @@ class UserServiceTest {
     when(userRepository.findById(id)).thenReturn(Optional.empty());
 
     assertThrows(NotFoundException.class, () -> userService.findById(id.toString()));
+  }
+
+  @Test
+  void shouldRejectStudentReadingAnotherUser() {
+    UUID requestedId = UUID.randomUUID();
+    JUser jUser = existingUser(requestedId);
+    when(userValidator.validateUuid(requestedId.toString())).thenReturn(requestedId);
+    when(userRepository.findById(requestedId)).thenReturn(Optional.of(jUser));
+
+    var student = new school.hei.demo.entity.User();
+    student.setId(UUID.randomUUID());
+    student.setUserRole(UserRole.STUDENT);
+    when(currentUserService.getCurrentUser()).thenReturn(student);
+
+    assertThrows(ForbiddenException.class, () -> userService.findById(requestedId.toString()));
   }
 
   @Test

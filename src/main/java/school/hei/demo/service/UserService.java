@@ -15,6 +15,7 @@ import school.hei.demo.domain.dto.response.UserPage;
 import school.hei.demo.domain.mappers.UserMapper;
 import school.hei.demo.enums.UserRole;
 import school.hei.demo.exception.ConflictException;
+import school.hei.demo.exception.ForbiddenException;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.SpecialtyRepository;
 import school.hei.demo.repository.UserRepository;
@@ -29,6 +30,7 @@ public class UserService {
   private final PasswordEncoder passwordEncoder;
   private final UserValidator userValidator;
   private final SpecialtyRepository specialtyRepository;
+  private final CurrentUserService currentUserService;
 
   public User create(UserCreate request) {
     userValidator.validate(request);
@@ -90,7 +92,16 @@ public class UserService {
   }
 
   public User findById(String userId) {
-    return toResponse(userMapper.toDomain(findJpaUser(userValidator.validateUuid(userId))));
+    UUID requestedUserId = userValidator.validateUuid(userId);
+    JUser requestedUser = findJpaUser(requestedUserId);
+    school.hei.demo.entity.User currentUser = currentUserService.getCurrentUser();
+
+    if (currentUser.getUserRole() == UserRole.STUDENT
+        && !requestedUserId.equals(currentUser.getId())) {
+      throw new ForbiddenException("Students can only access their own user data");
+    }
+
+    return toResponse(userMapper.toDomain(requestedUser));
   }
 
   public User update(String userId, UserUpdate request) {

@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -18,11 +19,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import school.hei.demo.domain.dto.request.GradeCreate;
 import school.hei.demo.domain.dto.request.GradeUpdate;
+import school.hei.demo.domain.dto.response.GradeResponse;
 import school.hei.demo.domain.mappers.GradeMapper;
 import school.hei.demo.endpoint.rest.controller.mapper.GradeRestMapper;
 import school.hei.demo.entity.Grade;
+import school.hei.demo.entity.User;
+import school.hei.demo.enums.UserRole;
 import school.hei.demo.exception.BadRequestException;
 import school.hei.demo.exception.NotFoundException;
+import school.hei.demo.repository.CourseAssignmentRepository;
 import school.hei.demo.repository.ExamRepository;
 import school.hei.demo.repository.GradeHistoryRepository;
 import school.hei.demo.repository.GradeRepository;
@@ -40,16 +45,27 @@ class GradeServiceTest {
   private static final UUID EXAM_ID = UUID.randomUUID();
   private static final UUID STUDENT_ID = UUID.randomUUID();
   private static final UUID GRADE_ID = UUID.randomUUID();
+  private static final UUID CURRENT_USER_ID = UUID.randomUUID();
 
   @Mock GradeRepository repository;
   @Mock GradeHistoryRepository historyRepository;
   @Mock ExamRepository examRepository;
+  @Mock CourseAssignmentRepository courseAssignmentRepository;
   @Mock UserRepository userRepository;
+  @Mock CurrentUserService currentUserService;
   @Mock GradeMapper mapper;
   @Mock GradeRestMapper restMapper;
   @Mock GradeValidator validator;
   @Mock PaginationValidator paginationValidator;
   @InjectMocks GradeService service;
+
+  @BeforeEach
+  void setUpAuthenticatedUser() {
+    var admin = new User();
+    admin.setId(CURRENT_USER_ID);
+    admin.setUserRole(UserRole.ADMIN);
+    when(currentUserService.getCurrentUser()).thenReturn(admin);
+  }
 
   @Test
   void shouldCreateGradeAndInitialHistory() {
@@ -68,6 +84,9 @@ class GradeServiceTest {
     when(mapper.toEntity(any(Grade.class))).thenReturn(savedEntity);
     when(repository.save(savedEntity)).thenReturn(savedEntity);
     when(mapper.toDomain(savedEntity)).thenReturn(savedGrade);
+    var currentUser = new User();
+    currentUser.setId(CURRENT_USER_ID);
+    when(currentUserService.getCurrentUser()).thenReturn(currentUser);
 
     service.create(COURSE_ID, EXAM_ID, request);
 
@@ -77,8 +96,7 @@ class GradeServiceTest {
     assertEquals(BigDecimal.ZERO, history.getValue().getOldValue());
     assertEquals(request.getValue(), history.getValue().getNewValue());
     assertEquals("Initial grade", history.getValue().getReason());
-    assertEquals(
-        UUID.fromString("2d4149bf-c264-464e-b6a4-a364275df2ec"), history.getValue().getChangedBy());
+    assertEquals(CURRENT_USER_ID, history.getValue().getChangedBy());
   }
 
   @Test
@@ -107,11 +125,16 @@ class GradeServiceTest {
     when(examRepository.findById(EXAM_ID)).thenReturn(Optional.of(exam));
     when(mapper.toEntity(any(Grade.class))).thenReturn(entity);
     when(repository.save(entity)).thenReturn(entity);
+    var currentUser = new User();
+    currentUser.setId(CURRENT_USER_ID);
+    when(currentUserService.getCurrentUser()).thenReturn(currentUser);
 
     service.update(
         COURSE_ID, EXAM_ID, GRADE_ID, new GradeUpdate(BigDecimal.valueOf(12), "Correction"));
 
-    verify(historyRepository).save(any(JGradeHistory.class));
+    var history = ArgumentCaptor.forClass(JGradeHistory.class);
+    verify(historyRepository).save(history.capture());
+    assertEquals(CURRENT_USER_ID, history.getValue().getChangedBy());
     verify(repository).save(entity);
   }
 
@@ -121,8 +144,15 @@ class GradeServiceTest {
     var entity = JGrade.builder().id(GRADE_ID).build();
     when(repository.findById(GRADE_ID)).thenReturn(Optional.of(entity));
     when(mapper.toDomain(entity)).thenReturn(grade);
+    when(examRepository.findById(EXAM_ID))
+        .thenReturn(
+            Optional.of(
+                JExam.builder()
+                    .id(EXAM_ID)
+                    .course(JCourse.builder().id(COURSE_ID).build())
+                    .build()));
 
-    service.delete(GRADE_ID);
+    service.delete(COURSE_ID, EXAM_ID, GRADE_ID);
 
     var inOrder = org.mockito.Mockito.inOrder(historyRepository, repository);
     inOrder.verify(historyRepository).deleteAllByGradeId(GRADE_ID);
@@ -132,6 +162,59 @@ class GradeServiceTest {
   @Test
   void shouldRejectDeletingUnknownGrade() {
     when(repository.findById(GRADE_ID)).thenReturn(Optional.empty());
-    assertThrows(NotFoundException.class, () -> service.delete(GRADE_ID));
+    assertThrows(NotFoundException.class, () -> service.delete(COURSE_ID, EXAM_ID, GRADE_ID));
+  }
+
+  @Test
+  void shouldRejectUnassignedTeacherBeforeReadingGrades() {
+    var teacher = new User();
+    teacher.setId(UUID.randomUUID());
+    teacher.setUserRole(UserRole.TEACHER);
+    when(currentUserService.getCurrentUser()).thenReturn(teacher);
+    when(courseAssignmentRepository.existsByCourse_IdAndTeacherId(COURSE_ID, teacher.getId()))
+        .thenReturn(false);
+
+    assertThrows(
+        school.hei.demo.exception.ForbiddenException.class,
+        () -> service.get(COURSE_ID, EXAM_ID, GRADE_ID));
+  }
+
+  @Test
+  void shouldAllowStudentToReadTheirOwnGrade() {
+    var student = new User();
+    student.setId(STUDENT_ID);
+    student.setUserRole(UserRole.STUDENT);
+    when(currentUserService.getCurrentUser()).thenReturn(student);
+
+    var grade = Grade.builder().id(GRADE_ID).studentId(STUDENT_ID).examId(EXAM_ID).build();
+    var entity = JGrade.builder().id(GRADE_ID).build();
+    var exam = JExam.builder().id(EXAM_ID).course(JCourse.builder().id(COURSE_ID).build()).build();
+    var response = GradeResponse.builder().id(GRADE_ID).studentId(STUDENT_ID).build();
+    when(repository.findById(GRADE_ID)).thenReturn(Optional.of(entity));
+    when(mapper.toDomain(entity)).thenReturn(grade);
+    when(examRepository.findById(EXAM_ID)).thenReturn(Optional.of(exam));
+    when(restMapper.toResponse(grade)).thenReturn(response);
+
+    assertEquals(response, service.get(COURSE_ID, EXAM_ID, GRADE_ID));
+  }
+
+  @Test
+  void shouldRejectStudentReadingAnotherStudentsGrade() {
+    var student = new User();
+    student.setId(STUDENT_ID);
+    student.setUserRole(UserRole.STUDENT);
+    when(currentUserService.getCurrentUser()).thenReturn(student);
+
+    UUID otherStudentId = UUID.randomUUID();
+    var grade = Grade.builder().id(GRADE_ID).studentId(otherStudentId).examId(EXAM_ID).build();
+    var entity = JGrade.builder().id(GRADE_ID).build();
+    var exam = JExam.builder().id(EXAM_ID).course(JCourse.builder().id(COURSE_ID).build()).build();
+    when(repository.findById(GRADE_ID)).thenReturn(Optional.of(entity));
+    when(mapper.toDomain(entity)).thenReturn(grade);
+    when(examRepository.findById(EXAM_ID)).thenReturn(Optional.of(exam));
+
+    assertThrows(
+        school.hei.demo.exception.ForbiddenException.class,
+        () -> service.get(COURSE_ID, EXAM_ID, GRADE_ID));
   }
 }

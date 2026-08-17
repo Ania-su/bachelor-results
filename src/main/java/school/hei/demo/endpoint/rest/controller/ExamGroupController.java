@@ -22,14 +22,14 @@ public class ExamGroupController {
   @GetMapping
   public ResponseEntity<List<ExamGroupResponse>> listExamGroups(
       @PathVariable UUID courseId, @PathVariable UUID examId) {
-    var body = service.listForExam(examId).stream().map(mapper::toResponse).toList();
+    var body = service.listForExam(courseId, examId).stream().map(mapper::toResponse).toList();
     return ResponseEntity.ok(body);
   }
 
   @GetMapping("/{examGroupId}")
   public ResponseEntity<ExamGroupResponse> getExamGroup(
       @PathVariable UUID courseId, @PathVariable UUID examId, @PathVariable UUID examGroupId) {
-    return ResponseEntity.ok(mapper.toResponse(service.get(examId, examGroupId)));
+    return ResponseEntity.ok(mapper.toResponse(service.get(courseId, examId, examGroupId)));
   }
 
   @PostMapping
@@ -37,14 +37,14 @@ public class ExamGroupController {
       @PathVariable UUID courseId,
       @PathVariable UUID examId,
       @RequestBody ExamGroupRequest request) {
-    var created = mapper.toResponse(service.create(examId, mapper.toDomain(request)));
+    var created = mapper.toResponse(service.create(courseId, examId, mapper.toDomain(request)));
     return ResponseEntity.status(HttpStatus.CREATED).body(created);
   }
 
   @DeleteMapping("/{examGroupId}")
   public ResponseEntity<Void> deleteExamGroup(
       @PathVariable UUID courseId, @PathVariable UUID examId, @PathVariable UUID examGroupId) {
-    service.delete(examId, examGroupId);
+    service.delete(courseId, examId, examGroupId);
     return ResponseEntity.noContent().build();
   }
 }

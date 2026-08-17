@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import school.hei.demo.domain.mappers.CourseAssignmentMapper;
 import school.hei.demo.entity.CourseAssignment;
+import school.hei.demo.enums.UserRole;
+import school.hei.demo.exception.ForbiddenException;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.CourseAssignmentRepository;
 import school.hei.demo.validators.CourseAssignmentValidator;
@@ -17,12 +19,15 @@ public class CourseAssignmentService {
   private final CourseAssignmentRepository repository;
   private final CourseAssignmentMapper mapper;
   private final CourseAssignmentValidator validator;
+  private final CurrentUserService currentUserService;
 
   public List<CourseAssignment> listForCourse(UUID courseId) {
+    ensureTeacherAssignedToCourse(courseId);
     return repository.findAllByCourse_Id(courseId).stream().map(mapper::toDomain).toList();
   }
 
   public CourseAssignment get(UUID courseId, UUID assignmentId) {
+    ensureTeacherAssignedToCourse(courseId);
     var assignment =
         repository
             .findById(assignmentId)
@@ -60,5 +65,17 @@ public class CourseAssignmentService {
     if (!assignment.getCourseId().equals(courseId)) {
       throw new NotFoundException("Assignment not found for this course");
     }
+  }
+
+  private void ensureTeacherAssignedToCourse(UUID courseId) {
+    var currentUser = currentUserService.getCurrentUser();
+    if (currentUser.getUserRole() == UserRole.TEACHER
+        && !isUserAssignedToCourse(currentUser.getId(), courseId)) {
+      throw new ForbiddenException("Teacher is not assigned to this course");
+    }
+  }
+
+  private boolean isUserAssignedToCourse(UUID userId, UUID courseId) {
+    return repository.existsByCourse_IdAndTeacherId(courseId, userId);
   }
 }
