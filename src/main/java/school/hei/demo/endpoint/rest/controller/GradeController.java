@@ -53,6 +53,6 @@ public class GradeController {
   @DeleteMapping("/{gradeId}")
   public GradeResponse deleteGrade(
       @PathVariable UUID courseId, @PathVariable UUID examId, @PathVariable UUID gradeId) {
-    return service.delete(gradeId);
+    return service.delete(courseId, examId, gradeId);
   }
 }
