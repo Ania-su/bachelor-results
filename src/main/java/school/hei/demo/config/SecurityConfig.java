@@ -41,6 +41,11 @@ public class SecurityConfig {
                     .requestMatchers(
                         HttpMethod.GET, "/courses/*/assignments", "/courses/*/assignments/**")
                     .hasAnyRole("ADMIN", "TEACHER")
+                    .requestMatchers(
+                        HttpMethod.GET, "/courses/*/exams/*/groups", "/courses/*/exams/*/groups/**")
+                    .hasAnyRole("ADMIN", "TEACHER", "STUDENT")
+                    .requestMatchers("/courses/*/exams/*/groups", "/courses/*/exams/*/groups/**")
+                    .hasAnyRole("ADMIN", "TEACHER")
                     .requestMatchers(HttpMethod.GET, "/courses/*/exams", "/courses/*/exams/**")
                     .hasAnyRole("ADMIN", "TEACHER", "STUDENT")
                     .requestMatchers("/courses/*/exams", "/courses/*/exams/**")

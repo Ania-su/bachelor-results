@@ -17,12 +17,15 @@ public class ExamGroupService {
   private final ExamGroupRepository repository;
   private final ExamGroupMapper mapper;
   private final ExamGroupValidator validator;
+  private final ExamService examService;
 
-  public List<ExamGroup> listForExam(UUID examId) {
+  public List<ExamGroup> listForExam(UUID courseId, UUID examId) {
+    examService.get(courseId, examId);
     return repository.findAllByExam_Id(examId).stream().map(mapper::toDomain).toList();
   }
 
-  public ExamGroup get(UUID examId, UUID examGroupId) {
+  public ExamGroup get(UUID courseId, UUID examId, UUID examGroupId) {
+    examService.get(courseId, examId);
     var examGroup =
         repository
             .findById(examGroupId)
@@ -32,14 +35,15 @@ public class ExamGroupService {
     return examGroup;
   }
 
-  public ExamGroup create(UUID examId, ExamGroup examGroup) {
+  public ExamGroup create(UUID courseId, UUID examId, ExamGroup examGroup) {
+    examService.get(courseId, examId);
     examGroup.setExamId(examId);
     validator.validate(examGroup);
     return mapper.toDomain(repository.save(mapper.toEntity(examGroup)));
   }
 
-  public void delete(UUID examId, UUID examGroupId) {
-    var examGroup = get(examId, examGroupId);
+  public void delete(UUID courseId, UUID examId, UUID examGroupId) {
+    var examGroup = get(courseId, examId, examGroupId);
     repository.deleteById(examGroup.getId());
   }
 
