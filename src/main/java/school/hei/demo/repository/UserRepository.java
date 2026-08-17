@@ -1,5 +1,6 @@
 package school.hei.demo.repository;
 
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,4 +39,6 @@ public interface UserRepository extends JpaRepository<JUser, UUID> {
       @Param("lastName") String lastName,
       @Param("email") String email,
       Pageable pageable);
+
+  List<JUser> findAllByUserRoleAndEntryYear(UserRole userRole, Integer entryYear);
 }
