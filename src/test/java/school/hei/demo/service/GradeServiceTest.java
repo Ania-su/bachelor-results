@@ -21,6 +21,7 @@ import school.hei.demo.domain.dto.request.GradeUpdate;
 import school.hei.demo.domain.mappers.GradeMapper;
 import school.hei.demo.endpoint.rest.controller.mapper.GradeRestMapper;
 import school.hei.demo.entity.Grade;
+import school.hei.demo.entity.User;
 import school.hei.demo.exception.BadRequestException;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.ExamRepository;
@@ -40,11 +41,13 @@ class GradeServiceTest {
   private static final UUID EXAM_ID = UUID.randomUUID();
   private static final UUID STUDENT_ID = UUID.randomUUID();
   private static final UUID GRADE_ID = UUID.randomUUID();
+  private static final UUID CURRENT_USER_ID = UUID.randomUUID();
 
   @Mock GradeRepository repository;
   @Mock GradeHistoryRepository historyRepository;
   @Mock ExamRepository examRepository;
   @Mock UserRepository userRepository;
+  @Mock CurrentUserService currentUserService;
   @Mock GradeMapper mapper;
   @Mock GradeRestMapper restMapper;
   @Mock GradeValidator validator;
@@ -68,6 +71,9 @@ class GradeServiceTest {
     when(mapper.toEntity(any(Grade.class))).thenReturn(savedEntity);
     when(repository.save(savedEntity)).thenReturn(savedEntity);
     when(mapper.toDomain(savedEntity)).thenReturn(savedGrade);
+    var currentUser = new User();
+    currentUser.setId(CURRENT_USER_ID);
+    when(currentUserService.getCurrentUser()).thenReturn(currentUser);
 
     service.create(COURSE_ID, EXAM_ID, request);
 
@@ -77,8 +83,7 @@ class GradeServiceTest {
     assertEquals(BigDecimal.ZERO, history.getValue().getOldValue());
     assertEquals(request.getValue(), history.getValue().getNewValue());
     assertEquals("Initial grade", history.getValue().getReason());
-    assertEquals(
-        UUID.fromString("2d4149bf-c264-464e-b6a4-a364275df2ec"), history.getValue().getChangedBy());
+    assertEquals(CURRENT_USER_ID, history.getValue().getChangedBy());
   }
 
   @Test
@@ -107,11 +112,16 @@ class GradeServiceTest {
     when(examRepository.findById(EXAM_ID)).thenReturn(Optional.of(exam));
     when(mapper.toEntity(any(Grade.class))).thenReturn(entity);
     when(repository.save(entity)).thenReturn(entity);
+    var currentUser = new User();
+    currentUser.setId(CURRENT_USER_ID);
+    when(currentUserService.getCurrentUser()).thenReturn(currentUser);
 
     service.update(
         COURSE_ID, EXAM_ID, GRADE_ID, new GradeUpdate(BigDecimal.valueOf(12), "Correction"));
 
-    verify(historyRepository).save(any(JGradeHistory.class));
+    var history = ArgumentCaptor.forClass(JGradeHistory.class);
+    verify(historyRepository).save(history.capture());
+    assertEquals(CURRENT_USER_ID, history.getValue().getChangedBy());
     verify(repository).save(entity);
   }
 

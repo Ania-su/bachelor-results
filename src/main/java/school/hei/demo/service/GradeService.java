@@ -25,13 +25,11 @@ import school.hei.demo.validators.PaginationValidator;
 @Service
 @AllArgsConstructor
 public class GradeService {
-  private static final UUID INITIAL_GRADE_USER_ID =
-      UUID.fromString("2d4149bf-c264-464e-b6a4-a364275df2ec");
-
   private final GradeRepository repository;
   private final GradeHistoryRepository historyRepository;
   private final ExamRepository examRepository;
   private final UserRepository userRepository;
+  private final CurrentUserService currentUserService;
   private final GradeMapper mapper;
   private final GradeRestMapper restMapper;
   private final GradeValidator validator;
@@ -100,7 +98,7 @@ public class GradeService {
             .oldValue(java.math.BigDecimal.ZERO)
             .newValue(createdGrade.getValue())
             .reason("Initial grade")
-            .changedBy(INITIAL_GRADE_USER_ID)
+            .changedBy(currentUserService.getCurrentUser().getId())
             .changedAt(Instant.now())
             .build());
 
@@ -128,7 +126,7 @@ public class GradeService {
             .newValue(request.getValue())
             .reason(request.getReason())
             .changedAt(now)
-            .changedBy(INITIAL_GRADE_USER_ID)
+            .changedBy(currentUserService.getCurrentUser().getId())
             .build());
 
     currentGrade.setValue(request.getValue());
