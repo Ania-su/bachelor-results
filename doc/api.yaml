@@ -738,47 +738,6 @@ paths:
               schema: { type: string, format: binary }
         '403': { $ref: '#/components/responses/Forbidden' }
 
-  /students/{studentId}/transcript:
-    get:
-      tags: [Students]
-      summary: Get a student's average grade for every course
-      operationId: getStudentTranscript
-      security: [{ bearerAuth: [] }]
-      parameters:
-        - $ref: '#/components/parameters/StudentId'
-        - $ref: '#/components/parameters/TranscriptYear'
-      responses:
-        '200':
-          description: Student transcript with course averages
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/StudentTranscript' }
-        '404': { $ref: '#/components/responses/NotFound' }
-
-  /students/{studentId}/transcript-email:
-    post:
-      tags: [Students]
-      summary: Generate and email a student's transcript
-      operationId: emailStudentTranscript
-      x-roles: [STUDENT, ADMIN]
-      security: [{ bearerAuth: [] }]
-      parameters:
-        - $ref: '#/components/parameters/StudentId'
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                recipientEmail: { type: string, format: email }
-      responses:
-        '202':
-          description: Transcript generation and email queued
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/TranscriptDelivery' }
-        '403': { $ref: '#/components/responses/Forbidden' }
 
   /promotions:
     get:
