@@ -31,17 +31,20 @@ import school.hei.demo.exception.ConflictException;
 import school.hei.demo.exception.GlobalExceptionHandler;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.service.GroupService;
+import school.hei.demo.service.StudentGroupHistoryService;
 
 @ExtendWith(MockitoExtension.class)
 class GroupControllerTest {
   @Mock GroupService service;
+  @Mock StudentGroupHistoryService studentGroupHistoryService;
   private MockMvc mockMvc;
   private ObjectMapper objectMapper;
 
   @BeforeEach
   void setUp() {
     mockMvc =
-        MockMvcBuilders.standaloneSetup(new GroupController(service, new GroupRestMapper()))
+        MockMvcBuilders.standaloneSetup(
+                new GroupController(service, new GroupRestMapper(), studentGroupHistoryService))
             .setControllerAdvice(new GlobalExceptionHandler())
             .build();
     objectMapper = new ObjectMapper().findAndRegisterModules();
