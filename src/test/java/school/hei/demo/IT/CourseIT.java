@@ -17,14 +17,21 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import school.hei.demo.conf.FacadeIT;
+import school.hei.demo.conf.TestAuthentication;
 import school.hei.demo.domain.dto.request.CourseRequest;
 import school.hei.demo.domain.dto.response.CoursePage;
 import school.hei.demo.domain.dto.response.CourseResponse;
 import school.hei.demo.repository.CourseRepository;
+import school.hei.demo.repository.SpecialtyRepository;
+import school.hei.demo.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 class CourseIT extends FacadeIT {
   @Autowired TestRestTemplate restTemplate;
   @Autowired CourseRepository repository;
+  @Autowired UserRepository userRepository;
+  @Autowired SpecialtyRepository specialtyRepository;
+  @Autowired PasswordEncoder passwordEncoder;
 
   @BeforeEach
   void cleanCourses() {
@@ -32,6 +39,7 @@ class CourseIT extends FacadeIT {
     restTemplate
         .getRestTemplate()
         .setRequestFactory(new JdkClientHttpRequestFactory(HttpClient.newHttpClient()));
+    TestAuthentication.configure(restTemplate, userRepository, specialtyRepository, passwordEncoder);
   }
 
   @Test

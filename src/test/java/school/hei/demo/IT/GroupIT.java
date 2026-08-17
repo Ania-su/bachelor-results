@@ -17,14 +17,21 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import school.hei.demo.conf.FacadeIT;
+import school.hei.demo.conf.TestAuthentication;
 import school.hei.demo.domain.dto.request.GroupRequest;
 import school.hei.demo.domain.dto.response.GroupPage;
 import school.hei.demo.domain.dto.response.GroupResponse;
 import school.hei.demo.repository.GroupRepository;
+import school.hei.demo.repository.SpecialtyRepository;
+import school.hei.demo.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 class GroupIT extends FacadeIT {
   @Autowired TestRestTemplate restTemplate;
   @Autowired GroupRepository repository;
+  @Autowired UserRepository userRepository;
+  @Autowired SpecialtyRepository specialtyRepository;
+  @Autowired PasswordEncoder passwordEncoder;
 
   @BeforeEach
   void cleanGroups() {
@@ -32,6 +39,7 @@ class GroupIT extends FacadeIT {
     restTemplate
         .getRestTemplate()
         .setRequestFactory(new JdkClientHttpRequestFactory(HttpClient.newHttpClient()));
+    TestAuthentication.configure(restTemplate, userRepository, specialtyRepository, passwordEncoder);
   }
 
   @Test
