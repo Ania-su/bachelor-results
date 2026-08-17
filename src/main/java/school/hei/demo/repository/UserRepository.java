@@ -21,6 +21,8 @@ public interface UserRepository extends JpaRepository<JUser, UUID> {
 
   boolean existsByEmailIgnoreCaseAndIdNot(String email, UUID id);
 
+  java.util.Optional<JUser> findByEmailIgnoreCase(String email);
+
   @Query(
       """
       select u from JUser u

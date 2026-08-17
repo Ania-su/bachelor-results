@@ -18,14 +18,21 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import school.hei.demo.conf.FacadeIT;
+import school.hei.demo.conf.TestAuthentication;
 import school.hei.demo.domain.dto.request.SpecialtyRequest;
 import school.hei.demo.domain.dto.response.SpecialtyResponse;
 import school.hei.demo.enums.CodeType;
+import school.hei.demo.repository.SpecialtyRepository;
+import school.hei.demo.repository.UserRepository;
 
 class SpecialtyIT extends FacadeIT {
   @Autowired TestRestTemplate restTemplate;
   @Autowired JdbcTemplate jdbcTemplate;
+  @Autowired UserRepository userRepository;
+  @Autowired SpecialtyRepository specialtyRepository;
+  @Autowired PasswordEncoder passwordEncoder;
 
   @BeforeEach
   void resetSeedSpecialties() {
@@ -38,6 +45,8 @@ class SpecialtyIT extends FacadeIT {
     restTemplate
         .getRestTemplate()
         .setRequestFactory(new JdkClientHttpRequestFactory(HttpClient.newHttpClient()));
+    TestAuthentication.configure(
+        restTemplate, userRepository, specialtyRepository, passwordEncoder);
   }
 
   @AfterEach
