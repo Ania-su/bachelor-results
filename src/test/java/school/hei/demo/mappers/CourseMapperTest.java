@@ -24,7 +24,7 @@ class CourseMapperTest {
 
   @Test
   void shouldReturnNullForNull() {
-    assertNull(mapper.toDomain(null));
+    assertNull(mapper.toDomain((JCourse) null));
     assertNull(mapper.toEntity(null));
   }
 }

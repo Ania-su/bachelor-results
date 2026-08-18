@@ -17,7 +17,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import school.hei.demo.domain.dto.request.SpecialtyRequest;
 import school.hei.demo.domain.dto.response.SpecialtyResponse;
 import school.hei.demo.domain.mappers.SpecialtyMapper;
-import school.hei.demo.endpoint.rest.controller.mapper.SpecialtyRestMapper;
 import school.hei.demo.entity.Specialty;
 import school.hei.demo.enums.CodeType;
 import school.hei.demo.exception.NotFoundException;
@@ -30,7 +29,6 @@ class SpecialtyServiceTest {
   @Mock SpecialtyRepository repository;
   @Mock SpecialtyMapper mapper;
   @Mock SpecialtyValidator validator;
-  @Mock SpecialtyRestMapper restMapper;
   @InjectMocks SpecialtyService service;
 
   @Test
@@ -47,8 +45,8 @@ class SpecialtyServiceTest {
     when(repository.existsById(id)).thenReturn(true);
     when(mapper.toEntity(any())).thenReturn(entity);
     when(mapper.toDomain(entity)).thenReturn(saved);
-    when(restMapper.toDomain(request)).thenReturn(domain);
-    when(restMapper.toResponse(any(Specialty.class))).thenReturn(response);
+    when(mapper.toDomain(request)).thenReturn(domain);
+    when(mapper.toResponse(any(Specialty.class))).thenReturn(response);
     assertEquals(1, service.list().size());
     assertEquals(id, service.create(request).getId());
     assertEquals("Software", service.update(id, request).getLabel());

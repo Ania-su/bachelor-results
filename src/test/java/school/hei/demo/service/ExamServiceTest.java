@@ -20,7 +20,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import school.hei.demo.domain.dto.request.ExamRequest;
 import school.hei.demo.domain.dto.response.ExamResponse;
 import school.hei.demo.domain.mappers.ExamMapper;
-import school.hei.demo.endpoint.rest.controller.mapper.ExamRestMapper;
 import school.hei.demo.entity.Exam;
 import school.hei.demo.entity.User;
 import school.hei.demo.enums.CodeType;
@@ -46,7 +45,6 @@ class ExamServiceTest {
   @Mock CourseAssignmentRepository courseAssignmentRepository;
   @Mock CourseSpecialtyRepository courseSpecialtyRepository;
   @Mock SpecialtyRepository specialtyRepository;
-  @Mock ExamRestMapper restMapper;
   @InjectMocks ExamService service;
 
   @BeforeEach
@@ -70,7 +68,7 @@ class ExamServiceTest {
         new ExamResponse(entity.getId(), courseId, exam.getDateExam(), BigDecimal.ONE);
     when(repository.findAllByCourse_Id(courseId)).thenReturn(List.of(entity));
     when(mapper.toDomain(entity)).thenReturn(exam);
-    when(restMapper.toResponse(exam)).thenReturn(response);
+    when(mapper.toResponse(exam)).thenReturn(response);
 
     assertEquals(List.of(response), service.listForCourse(courseId));
   }
@@ -86,11 +84,11 @@ class ExamServiceTest {
         new ExamResponse(examId, courseId, request.getDateExam(), request.getCoef());
     JExam entity =
         JExam.builder().id(examId).course(JCourse.builder().id(courseId).build()).build();
-    when(restMapper.toDomain(request)).thenReturn(domain);
+    when(mapper.toDomain(request)).thenReturn(domain);
     when(mapper.toEntity(any(Exam.class))).thenReturn(entity);
     when(repository.save(entity)).thenReturn(entity);
     when(mapper.toDomain(entity)).thenReturn(saved);
-    when(restMapper.toResponse(saved)).thenReturn(savedResponse);
+    when(mapper.toResponse(saved)).thenReturn(savedResponse);
     when(repository.findById(examId)).thenReturn(Optional.of(entity));
 
     assertEquals(savedResponse, service.create(courseId, request));
@@ -104,7 +102,7 @@ class ExamServiceTest {
     UUID courseId = UUID.randomUUID();
     UUID otherCourseId = UUID.randomUUID();
     UUID examId = UUID.randomUUID();
-    when(restMapper.toDomain(any(ExamRequest.class)))
+    when(mapper.toDomain(any(ExamRequest.class)))
         .thenReturn(new Exam(null, null, Instant.now(), BigDecimal.ONE));
     when(repository.findById(examId)).thenReturn(Optional.empty());
     assertThrows(NotFoundException.class, () -> service.get(courseId, examId));
@@ -172,7 +170,7 @@ class ExamServiceTest {
     when(repository.findAllByCourse_Id(courseId)).thenReturn(List.of(allowedEntity, oldEntity));
     when(mapper.toDomain(allowedEntity)).thenReturn(allowed);
     when(mapper.toDomain(oldEntity)).thenReturn(old);
-    when(restMapper.toResponse(allowed)).thenReturn(allowedResponse);
+    when(mapper.toResponse(allowed)).thenReturn(allowedResponse);
 
     assertEquals(List.of(allowedResponse), service.listForCourse(courseId));
   }

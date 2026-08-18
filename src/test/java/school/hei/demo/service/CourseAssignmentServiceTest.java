@@ -18,7 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import school.hei.demo.domain.dto.request.CourseAssignmentRequest;
 import school.hei.demo.domain.dto.response.CourseAssignmentResponse;
 import school.hei.demo.domain.mappers.CourseAssignmentMapper;
-import school.hei.demo.endpoint.rest.controller.mapper.CourseAssignmentRestMapper;
 import school.hei.demo.entity.CourseAssignment;
 import school.hei.demo.entity.User;
 import school.hei.demo.enums.UserRole;
@@ -36,7 +35,6 @@ class CourseAssignmentServiceTest {
   @Mock CourseAssignmentMapper mapper;
   @Mock CourseAssignmentValidator validator;
   @Mock CurrentUserService currentUserService;
-  @Mock CourseAssignmentRestMapper restMapper;
   @InjectMocks CourseAssignmentService service;
 
   @BeforeEach
@@ -59,7 +57,7 @@ class CourseAssignmentServiceTest {
         new CourseAssignmentResponse(entity.getId(), courseId, teacherId, groupId);
     when(repository.findAllByCourse_Id(courseId)).thenReturn(List.of(entity));
     when(mapper.toDomain(entity)).thenReturn(assignment);
-    when(restMapper.toResponse(assignment)).thenReturn(response);
+    when(mapper.toResponse(assignment)).thenReturn(response);
 
     assertEquals(List.of(response), service.listForCourse(courseId));
   }
@@ -82,11 +80,11 @@ class CourseAssignmentServiceTest {
             .group(JGroup.builder().id(groupId).build())
             .teacherId(teacherId)
             .build();
-    when(restMapper.toDomain(request)).thenReturn(domain);
+    when(mapper.toDomain(request)).thenReturn(domain);
     when(mapper.toEntity(any(CourseAssignment.class))).thenReturn(entity);
     when(repository.save(entity)).thenReturn(entity);
     when(mapper.toDomain(entity)).thenReturn(saved);
-    when(restMapper.toResponse(saved)).thenReturn(savedResponse);
+    when(mapper.toResponse(saved)).thenReturn(savedResponse);
     when(repository.findById(assignmentId)).thenReturn(Optional.of(entity));
 
     assertEquals(savedResponse, service.create(courseId, request));
@@ -100,7 +98,7 @@ class CourseAssignmentServiceTest {
     UUID courseId = UUID.randomUUID();
     UUID otherCourseId = UUID.randomUUID();
     UUID assignmentId = UUID.randomUUID();
-    when(restMapper.toDomain(any(CourseAssignmentRequest.class)))
+    when(mapper.toDomain(any(CourseAssignmentRequest.class)))
         .thenReturn(new CourseAssignment(null, null, UUID.randomUUID(), UUID.randomUUID()));
     when(repository.findById(assignmentId)).thenReturn(Optional.empty());
     assertThrows(NotFoundException.class, () -> service.get(courseId, assignmentId));

@@ -22,7 +22,6 @@ import school.hei.demo.domain.dto.request.GroupRequest;
 import school.hei.demo.domain.dto.response.GroupPage;
 import school.hei.demo.domain.dto.response.GroupResponse;
 import school.hei.demo.domain.mappers.GroupMapper;
-import school.hei.demo.endpoint.rest.controller.mapper.GroupRestMapper;
 import school.hei.demo.entity.Group;
 import school.hei.demo.exception.BadRequestException;
 import school.hei.demo.exception.NotFoundException;
@@ -37,7 +36,6 @@ class GroupServiceTest {
   @Mock GroupMapper mapper;
   @Mock GroupValidator validator;
   @Mock PaginationValidator paginationValidator;
-  @Mock GroupRestMapper restMapper;
   @InjectMocks GroupService service;
 
   @Test
@@ -48,7 +46,7 @@ class GroupServiceTest {
     when(repository.findAllFiltered(eq(2025), any()))
         .thenReturn(new PageImpl<>(List.of(entity), PageRequest.of(1, 2), 3));
     when(mapper.toDomain(entity)).thenReturn(group);
-    when(restMapper.toResponse(group)).thenReturn(response);
+    when(mapper.toResponse(group)).thenReturn(response);
 
     GroupPage page = service.list(2025, 1, 2);
     assertEquals(1, page.getContent().size());
@@ -64,8 +62,8 @@ class GroupServiceTest {
     Group saved = new Group(id, "B1", 2024);
     GroupResponse response = new GroupResponse(id, "B1", 2024);
     JGroup entity = new JGroup(id, "B1", 2024);
-    when(restMapper.toDomain(request)).thenReturn(domain);
-    when(restMapper.toResponse(any(Group.class))).thenReturn(response);
+    when(mapper.toDomain(request)).thenReturn(domain);
+    when(mapper.toResponse(any(Group.class))).thenReturn(response);
     when(repository.save(any())).thenReturn(entity);
     when(mapper.toEntity(any(Group.class))).thenReturn(entity);
     when(mapper.toDomain(entity)).thenReturn(saved);

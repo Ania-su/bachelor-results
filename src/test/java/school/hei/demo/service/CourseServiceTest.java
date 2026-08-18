@@ -22,7 +22,6 @@ import school.hei.demo.domain.dto.request.CourseRequest;
 import school.hei.demo.domain.dto.response.CoursePage;
 import school.hei.demo.domain.dto.response.CourseResponse;
 import school.hei.demo.domain.mappers.CourseMapper;
-import school.hei.demo.endpoint.rest.controller.mapper.CourseRestMapper;
 import school.hei.demo.entity.Course;
 import school.hei.demo.exception.BadRequestException;
 import school.hei.demo.exception.NotFoundException;
@@ -37,7 +36,6 @@ class CourseServiceTest {
   @Mock CourseMapper mapper;
   @Mock CourseValidator validator;
   @Mock PaginationValidator paginationValidator;
-  @Mock CourseRestMapper restMapper;
   @InjectMocks CourseService service;
 
   @Test
@@ -48,7 +46,7 @@ class CourseServiceTest {
     when(repository.findAllFiltered(eq(2), eq("algo"), any()))
         .thenReturn(new PageImpl<>(List.of(entity), PageRequest.of(1, 2), 3));
     when(mapper.toDomain(entity)).thenReturn(course);
-    when(restMapper.toResponse(course)).thenReturn(response);
+    when(mapper.toResponse(course)).thenReturn(response);
 
     CoursePage page = service.list(2, "algo", 1, 2);
     assertEquals(1, page.getContent().size());
@@ -64,8 +62,8 @@ class CourseServiceTest {
     Course saved = new Course(id, "CS", "Algorithms", 2, 6);
     CourseResponse response = new CourseResponse(id, "CS", "Algorithms", 2, 6);
     JCourse entity = new JCourse(id, "MA", "Math", 1, 4);
-    when(restMapper.toDomain(request)).thenReturn(domain);
-    when(restMapper.toResponse(any(Course.class))).thenReturn(response);
+    when(mapper.toDomain(request)).thenReturn(domain);
+    when(mapper.toResponse(any(Course.class))).thenReturn(response);
     when(repository.save(any())).thenReturn(entity);
     when(mapper.toEntity(any(Course.class))).thenReturn(entity);
     when(mapper.toDomain(entity)).thenReturn(saved);
