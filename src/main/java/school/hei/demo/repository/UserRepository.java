@@ -41,4 +41,14 @@ public interface UserRepository extends JpaRepository<JUser, UUID> {
       Pageable pageable);
 
   List<JUser> findAllByUserRoleAndEntryYear(UserRole userRole, Integer entryYear);
+
+  @Query(
+      """
+      SELECT DISTINCT u.entryYear
+      FROM JUser u
+      WHERE u.userRole = :role
+        AND u.entryYear IS NOT NULL
+      ORDER BY u.entryYear DESC
+      """)
+  List<Integer> findDistinctStudentEntryYears(@Param("role") UserRole role);
 }
