@@ -6,7 +6,9 @@ import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -18,6 +20,8 @@ import school.hei.demo.domain.dto.response.StudentTranscriptResponse;
 import school.hei.demo.domain.dto.response.User;
 import school.hei.demo.domain.dto.response.YearTranscriptResponse;
 import school.hei.demo.domain.mappers.UserMapper;
+import school.hei.demo.endpoint.event.EventProducer;
+import school.hei.demo.endpoint.event.model.SendEmailRequested;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.file.bucket.BucketComponent;
 import school.hei.demo.repository.CourseRepository;
@@ -34,6 +38,7 @@ public class StudentTranscriptService {
   private final StudentCourseGradeService studentCourseGradeService;
   private final BucketComponent bucketComponent;
   private final TranscriptHtmlService transcriptHtmlService;
+  private final EventProducer<SendEmailRequested> eventProducer;
 
   @Transactional(readOnly = true)
   public StudentTranscriptResponse get(UUID studentId, Integer year) {
@@ -112,17 +117,30 @@ public class StudentTranscriptService {
   }
 
   @SneakyThrows
-  @Transactional(readOnly = true)
-  public String getTranscriptPdfUrl(UUID studentId, Integer year) {
+  public String sendTranscriptByEmail(UUID studentId, Integer year) {
     var transcript = get(studentId, year);
+
     var html = transcriptHtmlService.toHtml(transcript);
     var fileSuffix = ".pdf";
     var filePrefix = "transcript-" + studentId;
     var bucketKey = "transcripts/" + studentId + fileSuffix;
     var fileToUpload = createTempFile(filePrefix, fileSuffix);
     writeTranscriptIntoFile(html, fileToUpload);
+
     bucketComponent.upload(fileToUpload, bucketKey);
-    return bucketComponent.presign(bucketKey, Duration.ofMinutes(10)).toString();
+    var presignedUrl = bucketComponent.presign(bucketKey, Duration.ofMinutes(10)).toString();
+
+    var emailBody = createEmailBody(transcript.getUser(), presignedUrl);
+
+    var event =
+        SendEmailRequested.builder()
+            .to(transcript.getUser().getEmail())
+            .body(emailBody)
+            .subject(transcript.getUser().getReference() + " transcript")
+            .build();
+    eventProducer.accept(List.of(event));
+
+    return "Check your email for your requested transcript.";
   }
 
   @SneakyThrows
@@ -134,6 +152,22 @@ public class StudentTranscriptService {
       builder.toStream(outputStream);
       builder.run();
     }
+  }
+
+  private String createEmailBody(User user, String url) {
+    var emailBody = new StringBuilder();
+
+    emailBody
+        .append("<p>Hi, " + transcriptHtmlService.escape(user.getLastName()) + "</p>")
+        .append(
+            "<p>Please find below the link to the transcript you requested on "
+                + LocalDate.now()
+                + "</p>")
+        .append("<a href=\"" + url + "\">Link to transcript</a>")
+        .append("<p>This link will expire in 10 minutes</p>")
+        .append("<p>Best regards</p>");
+
+    return emailBody.toString();
   }
 
   private record CourseTranscriptData(CourseAverageResponse course, boolean hasAllGrades) {}
