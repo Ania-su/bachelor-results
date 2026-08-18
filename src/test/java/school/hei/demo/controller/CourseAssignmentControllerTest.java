@@ -21,9 +21,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import school.hei.demo.domain.dto.request.CourseAssignmentRequest;
+import school.hei.demo.domain.dto.response.CourseAssignmentResponse;
 import school.hei.demo.endpoint.rest.controller.CourseAssignmentController;
-import school.hei.demo.endpoint.rest.controller.mapper.CourseAssignmentRestMapper;
-import school.hei.demo.entity.CourseAssignment;
 import school.hei.demo.exception.GlobalExceptionHandler;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.service.CourseAssignmentService;
@@ -37,8 +36,7 @@ class CourseAssignmentControllerTest {
   @BeforeEach
   void setUp() {
     mockMvc =
-        MockMvcBuilders.standaloneSetup(
-                new CourseAssignmentController(service, new CourseAssignmentRestMapper()))
+        MockMvcBuilders.standaloneSetup(new CourseAssignmentController(service))
             .setControllerAdvice(new GlobalExceptionHandler())
             .build();
     objectMapper = new ObjectMapper().findAndRegisterModules();
@@ -50,12 +48,14 @@ class CourseAssignmentControllerTest {
     UUID assignmentId = UUID.randomUUID();
     UUID teacherId = UUID.randomUUID();
     UUID groupId = UUID.randomUUID();
-    CourseAssignment assignment = new CourseAssignment(assignmentId, courseId, teacherId, groupId);
+    CourseAssignmentResponse assignment =
+        new CourseAssignmentResponse(assignmentId, courseId, teacherId, groupId);
     CourseAssignmentRequest request = new CourseAssignmentRequest(teacherId, groupId);
-    when(service.create(eq(courseId), any())).thenReturn(assignment);
+    when(service.create(eq(courseId), any(CourseAssignmentRequest.class))).thenReturn(assignment);
     when(service.listForCourse(courseId)).thenReturn(List.of(assignment));
     when(service.get(courseId, assignmentId)).thenReturn(assignment);
-    when(service.update(eq(courseId), eq(assignmentId), any())).thenReturn(assignment);
+    when(service.update(eq(courseId), eq(assignmentId), any(CourseAssignmentRequest.class)))
+        .thenReturn(assignment);
 
     mockMvc
         .perform(

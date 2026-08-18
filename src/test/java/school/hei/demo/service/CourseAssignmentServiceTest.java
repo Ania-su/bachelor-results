@@ -15,6 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import school.hei.demo.domain.dto.request.CourseAssignmentRequest;
+import school.hei.demo.domain.dto.response.CourseAssignmentResponse;
 import school.hei.demo.domain.mappers.CourseAssignmentMapper;
 import school.hei.demo.entity.CourseAssignment;
 import school.hei.demo.entity.User;
@@ -46,37 +48,47 @@ class CourseAssignmentServiceTest {
   @Test
   void shouldListAssignmentsForCourse() {
     UUID courseId = UUID.randomUUID();
+    UUID teacherId = UUID.randomUUID();
+    UUID groupId = UUID.randomUUID();
     JCourseAssignment entity = JCourseAssignment.builder().id(UUID.randomUUID()).build();
     CourseAssignment assignment =
-        new CourseAssignment(entity.getId(), courseId, UUID.randomUUID(), UUID.randomUUID());
+        new CourseAssignment(entity.getId(), courseId, teacherId, groupId);
+    CourseAssignmentResponse response =
+        new CourseAssignmentResponse(entity.getId(), courseId, teacherId, groupId);
     when(repository.findAllByCourse_Id(courseId)).thenReturn(List.of(entity));
     when(mapper.toDomain(entity)).thenReturn(assignment);
+    when(mapper.toResponse(assignment)).thenReturn(response);
 
-    assertEquals(List.of(assignment), service.listForCourse(courseId));
+    assertEquals(List.of(response), service.listForCourse(courseId));
   }
 
   @Test
   void shouldCreateUpdateAndDeleteAssignment() {
     UUID courseId = UUID.randomUUID();
     UUID assignmentId = UUID.randomUUID();
-    CourseAssignment request =
-        new CourseAssignment(null, null, UUID.randomUUID(), UUID.randomUUID());
-    CourseAssignment saved =
-        new CourseAssignment(assignmentId, courseId, request.getTeacherId(), request.getGroupId());
+    UUID teacherId = UUID.randomUUID();
+    UUID groupId = UUID.randomUUID();
+    CourseAssignmentRequest request = new CourseAssignmentRequest(teacherId, groupId);
+    CourseAssignment domain = new CourseAssignment(null, null, teacherId, groupId);
+    CourseAssignment saved = new CourseAssignment(assignmentId, courseId, teacherId, groupId);
+    CourseAssignmentResponse savedResponse =
+        new CourseAssignmentResponse(assignmentId, courseId, teacherId, groupId);
     JCourseAssignment entity =
         JCourseAssignment.builder()
             .id(assignmentId)
             .course(JCourse.builder().id(courseId).build())
-            .group(JGroup.builder().id(request.getGroupId()).build())
-            .teacherId(request.getTeacherId())
+            .group(JGroup.builder().id(groupId).build())
+            .teacherId(teacherId)
             .build();
+    when(mapper.toDomain(request)).thenReturn(domain);
     when(mapper.toEntity(any(CourseAssignment.class))).thenReturn(entity);
     when(repository.save(entity)).thenReturn(entity);
     when(mapper.toDomain(entity)).thenReturn(saved);
+    when(mapper.toResponse(saved)).thenReturn(savedResponse);
     when(repository.findById(assignmentId)).thenReturn(Optional.of(entity));
 
-    assertEquals(saved, service.create(courseId, request));
-    assertEquals(saved, service.update(courseId, assignmentId, request));
+    assertEquals(savedResponse, service.create(courseId, request));
+    assertEquals(savedResponse, service.update(courseId, assignmentId, request));
     service.delete(courseId, assignmentId);
     verify(repository).deleteById(assignmentId);
   }
@@ -86,6 +98,8 @@ class CourseAssignmentServiceTest {
     UUID courseId = UUID.randomUUID();
     UUID otherCourseId = UUID.randomUUID();
     UUID assignmentId = UUID.randomUUID();
+    when(mapper.toDomain(any(CourseAssignmentRequest.class)))
+        .thenReturn(new CourseAssignment(null, null, UUID.randomUUID(), UUID.randomUUID()));
     when(repository.findById(assignmentId)).thenReturn(Optional.empty());
     assertThrows(NotFoundException.class, () -> service.get(courseId, assignmentId));
     assertThrows(
@@ -101,8 +115,8 @@ class CourseAssignmentServiceTest {
     assertThrows(NotFoundException.class, () -> service.delete(courseId, assignmentId));
   }
 
-  private CourseAssignment validAssignment() {
-    return new CourseAssignment(null, null, UUID.randomUUID(), UUID.randomUUID());
+  private CourseAssignmentRequest validAssignment() {
+    return new CourseAssignmentRequest(UUID.randomUUID(), UUID.randomUUID());
   }
 
   @Test

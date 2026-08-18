@@ -23,9 +23,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import school.hei.demo.domain.dto.request.ExamRequest;
+import school.hei.demo.domain.dto.response.ExamResponse;
 import school.hei.demo.endpoint.rest.controller.ExamController;
-import school.hei.demo.endpoint.rest.controller.mapper.ExamRestMapper;
-import school.hei.demo.entity.Exam;
 import school.hei.demo.exception.GlobalExceptionHandler;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.service.ExamService;
@@ -39,7 +38,7 @@ class ExamControllerTest {
   @BeforeEach
   void setUp() {
     mockMvc =
-        MockMvcBuilders.standaloneSetup(new ExamController(service, new ExamRestMapper()))
+        MockMvcBuilders.standaloneSetup(new ExamController(service))
             .setControllerAdvice(new GlobalExceptionHandler())
             .build();
     objectMapper = new ObjectMapper().findAndRegisterModules();
@@ -49,13 +48,14 @@ class ExamControllerTest {
   void shouldCreateListGetUpdateAndDeleteExam() throws Exception {
     UUID courseId = UUID.randomUUID();
     UUID examId = UUID.randomUUID();
-    Exam exam =
-        new Exam(examId, courseId, Instant.parse("2025-06-15T10:00:00Z"), BigDecimal.valueOf(0.5));
+    ExamResponse exam =
+        new ExamResponse(
+            examId, courseId, Instant.parse("2025-06-15T10:00:00Z"), BigDecimal.valueOf(0.5));
     ExamRequest request = new ExamRequest(exam.getDateExam(), exam.getCoef());
-    when(service.create(eq(courseId), any())).thenReturn(exam);
+    when(service.create(eq(courseId), any(ExamRequest.class))).thenReturn(exam);
     when(service.listForCourse(courseId)).thenReturn(List.of(exam));
     when(service.get(courseId, examId)).thenReturn(exam);
-    when(service.update(eq(courseId), eq(examId), any())).thenReturn(exam);
+    when(service.update(eq(courseId), eq(examId), any(ExamRequest.class))).thenReturn(exam);
 
     mockMvc
         .perform(

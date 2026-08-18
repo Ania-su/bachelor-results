@@ -18,14 +18,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import school.hei.demo.domain.dto.request.CourseRequest;
+import school.hei.demo.domain.dto.response.CoursePage;
+import school.hei.demo.domain.dto.response.CourseResponse;
+import school.hei.demo.domain.dto.response.PageMetadata;
 import school.hei.demo.endpoint.rest.controller.CourseController;
-import school.hei.demo.endpoint.rest.controller.mapper.CourseRestMapper;
-import school.hei.demo.entity.Course;
 import school.hei.demo.exception.BadRequestException;
 import school.hei.demo.exception.ConflictException;
 import school.hei.demo.exception.GlobalExceptionHandler;
@@ -41,7 +40,7 @@ class CourseControllerTest {
   @BeforeEach
   void setUp() {
     mockMvc =
-        MockMvcBuilders.standaloneSetup(new CourseController(service, new CourseRestMapper()))
+        MockMvcBuilders.standaloneSetup(new CourseController(service))
             .setControllerAdvice(new GlobalExceptionHandler())
             .build();
     objectMapper = new ObjectMapper().findAndRegisterModules();
@@ -50,12 +49,13 @@ class CourseControllerTest {
   @Test
   void shouldCreateListWithFiltersUpdateAndDelete() throws Exception {
     UUID id = UUID.randomUUID();
-    Course course = new Course(id, "CS", "Algorithms", 2, 6);
+    CourseResponse course = new CourseResponse(id, "CS", "Algorithms", 2, 6);
     CourseRequest request = new CourseRequest("CS", "Algorithms", 2, 6);
-    when(service.create(any())).thenReturn(course);
+    when(service.create(any(CourseRequest.class))).thenReturn(course);
     when(service.list(2, "algo", 1, 2))
-        .thenReturn(new PageImpl<>(List.of(course), PageRequest.of(1, 2), 3));
-    when(service.update(org.mockito.ArgumentMatchers.eq(id), any())).thenReturn(course);
+        .thenReturn(new CoursePage(List.of(course), new PageMetadata(1, 2, 3, 2)));
+    when(service.update(org.mockito.ArgumentMatchers.eq(id), any(CourseRequest.class)))
+        .thenReturn(course);
     mockMvc
         .perform(
             post("/courses")
@@ -85,8 +85,13 @@ class CourseControllerTest {
   void shouldReturnExpectedErrors() throws Exception {
     UUID id = UUID.randomUUID();
     lenient().when(service.get(id)).thenThrow(new NotFoundException("missing"));
-    lenient().when(service.create(any(Course.class))).thenThrow(new ConflictException("duplicate"));
-    lenient().doThrow(new BadRequestException("invalid")).when(service).create((Course) null);
+    lenient()
+        .when(service.create(any(CourseRequest.class)))
+        .thenThrow(new ConflictException("duplicate"));
+    lenient()
+        .doThrow(new BadRequestException("invalid"))
+        .when(service)
+        .create((CourseRequest) null);
     CourseRequest request = new CourseRequest("CS", "Algorithms", 2, 6);
     mockMvc.perform(get("/courses/{id}", id)).andExpect(status().isNotFound());
     mockMvc

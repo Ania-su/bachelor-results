@@ -25,7 +25,7 @@ class SpecialtyMapperTest {
 
   @Test
   void shouldReturnNullForNull() {
-    assertNull(mapper.toDomain(null));
+    assertNull(mapper.toDomain((JSpecialty) null));
     assertNull(mapper.toEntity(null));
   }
 }

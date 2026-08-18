@@ -3,10 +3,11 @@ package school.hei.demo.endpoint.rest.controller;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import school.hei.demo.domain.dto.request.LoginRequest;
 import school.hei.demo.domain.dto.response.AuthResponse;
@@ -19,8 +20,8 @@ public class AuthController {
   private final AuthService authService;
 
   @PostMapping("/login")
-  public ResponseEntity<AuthResponse> login(
-      @RequestBody LoginRequest request, HttpServletResponse response) {
+  @ResponseStatus(HttpStatus.OK)
+  public AuthResponse login(@RequestBody LoginRequest request, HttpServletResponse response) {
     AuthResponse authResponse = authService.login(request);
 
     Cookie sessionCookie = new Cookie("session", authResponse.getAccessToken());
@@ -29,6 +30,6 @@ public class AuthController {
     sessionCookie.setMaxAge(authResponse.getExpiresIn());
     response.addCookie(sessionCookie);
 
-    return ResponseEntity.ok(authResponse);
+    return authResponse;
   }
 }

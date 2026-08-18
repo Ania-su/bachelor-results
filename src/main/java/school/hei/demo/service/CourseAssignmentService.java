@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import school.hei.demo.domain.dto.request.CourseAssignmentRequest;
+import school.hei.demo.domain.dto.response.CourseAssignmentResponse;
 import school.hei.demo.domain.mappers.CourseAssignmentMapper;
 import school.hei.demo.entity.CourseAssignment;
 import school.hei.demo.enums.UserRole;
@@ -21,12 +23,15 @@ public class CourseAssignmentService {
   private final CourseAssignmentValidator validator;
   private final CurrentUserService currentUserService;
 
-  public List<CourseAssignment> listForCourse(UUID courseId) {
+  public List<CourseAssignmentResponse> listForCourse(UUID courseId) {
     ensureTeacherAssignedToCourse(courseId);
-    return repository.findAllByCourse_Id(courseId).stream().map(mapper::toDomain).toList();
+    return repository.findAllByCourse_Id(courseId).stream()
+        .map(mapper::toDomain)
+        .map(mapper::toResponse)
+        .toList();
   }
 
-  public CourseAssignment get(UUID courseId, UUID assignmentId) {
+  public CourseAssignmentResponse get(UUID courseId, UUID assignmentId) {
     ensureTeacherAssignedToCourse(courseId);
     var assignment =
         repository
@@ -34,16 +39,19 @@ public class CourseAssignmentService {
             .map(mapper::toDomain)
             .orElseThrow(() -> new NotFoundException("Assignment " + assignmentId + " not found"));
     ensureBelongsToCourse(assignment, courseId);
-    return assignment;
+    return mapper.toResponse(assignment);
   }
 
-  public CourseAssignment create(UUID courseId, CourseAssignment assignment) {
+  public CourseAssignmentResponse create(UUID courseId, CourseAssignmentRequest request) {
+    var assignment = mapper.toDomain(request);
     assignment.setCourseId(courseId);
     validator.validate(assignment);
-    return mapper.toDomain(repository.save(mapper.toEntity(assignment)));
+    return mapper.toResponse(mapper.toDomain(repository.save(mapper.toEntity(assignment))));
   }
 
-  public CourseAssignment update(UUID courseId, UUID assignmentId, CourseAssignment updated) {
+  public CourseAssignmentResponse update(
+      UUID courseId, UUID assignmentId, CourseAssignmentRequest request) {
+    var updated = mapper.toDomain(request);
     updated.setCourseId(courseId);
     validator.validate(updated);
     var existing =
@@ -53,7 +61,7 @@ public class CourseAssignmentService {
     ensureBelongsToCourse(mapper.toDomain(existing), courseId);
 
     var toSave = mapper.toEntity(updated.toBuilder().id(assignmentId).build());
-    return mapper.toDomain(repository.save(toSave));
+    return mapper.toResponse(mapper.toDomain(repository.save(toSave)));
   }
 
   public void delete(UUID courseId, UUID assignmentId) {

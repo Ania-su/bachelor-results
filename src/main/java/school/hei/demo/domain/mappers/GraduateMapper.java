@@ -1,11 +1,11 @@
-package school.hei.demo.endpoint.rest.controller.mapper;
+package school.hei.demo.domain.mappers;
 
 import org.springframework.stereotype.Component;
 import school.hei.demo.domain.dto.response.GraduateResponse;
 import school.hei.demo.entity.Graduate;
 
 @Component
-public class GraduateRestMapper {
+public class GraduateMapper {
 
   public GraduateResponse toResponse(Graduate g) {
     return GraduateResponse.builder()

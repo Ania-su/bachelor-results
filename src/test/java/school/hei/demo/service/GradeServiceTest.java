@@ -21,7 +21,6 @@ import school.hei.demo.domain.dto.request.GradeCreate;
 import school.hei.demo.domain.dto.request.GradeUpdate;
 import school.hei.demo.domain.dto.response.GradeResponse;
 import school.hei.demo.domain.mappers.GradeMapper;
-import school.hei.demo.endpoint.rest.controller.mapper.GradeRestMapper;
 import school.hei.demo.entity.Grade;
 import school.hei.demo.entity.User;
 import school.hei.demo.enums.UserRole;
@@ -54,7 +53,6 @@ class GradeServiceTest {
   @Mock UserRepository userRepository;
   @Mock CurrentUserService currentUserService;
   @Mock GradeMapper mapper;
-  @Mock GradeRestMapper restMapper;
   @Mock GradeValidator validator;
   @Mock PaginationValidator paginationValidator;
   @InjectMocks GradeService service;
@@ -80,7 +78,7 @@ class GradeServiceTest {
     when(examRepository.findById(EXAM_ID)).thenReturn(Optional.of(exam));
     when(userRepository.existsById(STUDENT_ID)).thenReturn(true);
     when(repository.existsByStudent_IdAndExam_Id(STUDENT_ID, EXAM_ID)).thenReturn(false);
-    when(restMapper.toDomain(request)).thenReturn(grade);
+    when(mapper.toDomain(request)).thenReturn(grade);
     when(mapper.toEntity(any(Grade.class))).thenReturn(savedEntity);
     when(repository.save(savedEntity)).thenReturn(savedEntity);
     when(mapper.toDomain(savedEntity)).thenReturn(savedGrade);
@@ -108,7 +106,7 @@ class GradeServiceTest {
     when(examRepository.findById(EXAM_ID)).thenReturn(Optional.of(exam));
     when(userRepository.existsById(STUDENT_ID)).thenReturn(true);
     when(repository.existsByStudent_IdAndExam_Id(STUDENT_ID, EXAM_ID)).thenReturn(true);
-    when(restMapper.toDomain(request)).thenReturn(grade);
+    when(mapper.toDomain(request)).thenReturn(grade);
 
     assertThrows(BadRequestException.class, () -> service.create(COURSE_ID, EXAM_ID, request));
   }
@@ -193,7 +191,7 @@ class GradeServiceTest {
     when(repository.findById(GRADE_ID)).thenReturn(Optional.of(entity));
     when(mapper.toDomain(entity)).thenReturn(grade);
     when(examRepository.findById(EXAM_ID)).thenReturn(Optional.of(exam));
-    when(restMapper.toResponse(grade)).thenReturn(response);
+    when(mapper.toResponse(grade)).thenReturn(response);
 
     assertEquals(response, service.get(COURSE_ID, EXAM_ID, GRADE_ID));
   }
