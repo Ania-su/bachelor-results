@@ -6,13 +6,13 @@ import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
-import org.joda.time.LocalDate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import school.hei.demo.domain.dto.response.CourseAverageResponse;
@@ -117,8 +117,7 @@ public class StudentTranscriptService {
   }
 
   @SneakyThrows
-  @Transactional(readOnly = true)
-  public String getTranscriptPdfUrl(UUID studentId, Integer year) {
+  public String sendTranscriptByEmail(UUID studentId, Integer year) {
     var transcript = get(studentId, year);
 
     var html = transcriptHtmlService.toHtml(transcript);
@@ -159,10 +158,10 @@ public class StudentTranscriptService {
     var emailBody = new StringBuilder();
 
     emailBody
-        .append("<p>Hi, " + user.getLastName() + "</p>")
+        .append("<p>Hi, " + transcriptHtmlService.escape(user.getLastName()) + "</p>")
         .append(
-            "<p>Please find bellow the link to the transcript you requested on "
-                + new LocalDate()
+            "<p>Please find below the link to the transcript you requested on "
+                + LocalDate.now()
                 + "</p>")
         .append("<a href=\"" + url + "\">Link to transcript</a>")
         .append("<p>This link will expire in 10 minutes</p>")

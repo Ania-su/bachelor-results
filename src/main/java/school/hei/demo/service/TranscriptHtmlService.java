@@ -105,7 +105,7 @@ public class TranscriptHtmlService {
     return average == null ? "—" : String.format(Locale.FRENCH, "%.2f", average);
   }
 
-  private String escape(String value) {
+  public String escape(String value) {
     if (value == null) {
       return "";
     }
