@@ -3,11 +3,14 @@ package school.hei.demo.service;
 import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import school.hei.demo.domain.dto.request.GroupRequest;
+import school.hei.demo.domain.dto.response.GroupPage;
+import school.hei.demo.domain.dto.response.GroupResponse;
+import school.hei.demo.domain.dto.response.PageMetadata;
 import school.hei.demo.domain.mappers.GroupMapper;
-import school.hei.demo.entity.Group;
+import school.hei.demo.endpoint.rest.controller.mapper.GroupRestMapper;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.GroupRepository;
 import school.hei.demo.validators.GroupValidator;
@@ -21,31 +24,44 @@ public class GroupService {
   private final GroupMapper mapper;
   private final GroupValidator validator;
   private final PaginationValidator paginationValidator;
+  private final GroupRestMapper restMapper;
 
-  public List<Group> listAll() {
-    return repository.findAll().stream().map(mapper::toDomain).toList();
+  public List<GroupResponse> listAll() {
+    return repository.findAll().stream().map(mapper::toDomain).map(restMapper::toResponse).toList();
   }
 
-  public Page<Group> list(Integer academicYear, int page, int pageSize) {
+  public GroupPage list(Integer academicYear, int page, int pageSize) {
     paginationValidator.validate(page, pageSize);
-    return repository
-        .findAllFiltered(academicYear, PageRequest.of(page, pageSize))
-        .map(mapper::toDomain);
+    var result =
+        repository
+            .findAllFiltered(academicYear, PageRequest.of(page, pageSize))
+            .map(mapper::toDomain);
+    var body = result.getContent().stream().map(restMapper::toResponse).toList();
+    return new GroupPage(
+        body,
+        new PageMetadata(
+            result.getNumber(),
+            result.getSize(),
+            Math.toIntExact(result.getTotalElements()),
+            result.getTotalPages()));
   }
 
-  public Group get(UUID id) {
-    return repository
-        .findById(id)
-        .map(mapper::toDomain)
-        .orElseThrow(() -> new NotFoundException("Group " + id + " not found"));
+  public GroupResponse get(UUID id) {
+    return restMapper.toResponse(
+        repository
+            .findById(id)
+            .map(mapper::toDomain)
+            .orElseThrow(() -> new NotFoundException("Group " + id + " not found")));
   }
 
-  public Group create(Group group) {
+  public GroupResponse create(GroupRequest request) {
+    var group = restMapper.toDomain(request);
     validator.validate(group);
-    return mapper.toDomain(repository.save(mapper.toEntity(group)));
+    return restMapper.toResponse(mapper.toDomain(repository.save(mapper.toEntity(group))));
   }
 
-  public Group update(UUID id, Group updated) {
+  public GroupResponse update(UUID id, GroupRequest request) {
+    var updated = restMapper.toDomain(request);
     validator.validate(updated);
     var existing =
         repository
@@ -53,7 +69,7 @@ public class GroupService {
             .orElseThrow(() -> new NotFoundException("Group " + id + " not found"));
     existing.setReference(updated.getReference());
     existing.setAcademicYear(updated.getAcademicYear());
-    return mapper.toDomain(repository.save(existing));
+    return restMapper.toResponse(mapper.toDomain(repository.save(existing)));
   }
 
   public void delete(UUID id) {

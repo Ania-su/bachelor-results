@@ -9,10 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import school.hei.demo.domain.dto.request.GroupRequest;
 import school.hei.demo.domain.dto.response.GroupPage;
 import school.hei.demo.domain.dto.response.GroupResponse;
-import school.hei.demo.domain.dto.response.PageMetadata;
 import school.hei.demo.domain.dto.response.User;
-import school.hei.demo.endpoint.rest.controller.mapper.GroupRestMapper;
-import school.hei.demo.repository.model.JUser;
 import school.hei.demo.service.GroupService;
 import school.hei.demo.service.StudentGroupHistoryService;
 
@@ -22,7 +19,6 @@ import school.hei.demo.service.StudentGroupHistoryService;
 public class GroupController {
 
   private final GroupService service;
-  private final GroupRestMapper mapper;
   private final StudentGroupHistoryService studentGroupHistoryService;
 
   @GetMapping
@@ -30,32 +26,23 @@ public class GroupController {
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "20") int pageSize,
       @RequestParam(required = false) Integer academicYear) {
-
-    var result = service.list(academicYear, page, pageSize);
-    var body = result.getContent().stream().map(mapper::toResponse).toList();
-    return new GroupPage(
-        body,
-        new PageMetadata(
-            result.getNumber(),
-            result.getSize(),
-            Math.toIntExact(result.getTotalElements()),
-            result.getTotalPages()));
+    return service.list(academicYear, page, pageSize);
   }
 
   @GetMapping("/{groupId}")
   public GroupResponse getGroup(@PathVariable UUID groupId) {
-    return mapper.toResponse(service.get(groupId));
+    return service.get(groupId);
   }
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public GroupResponse createGroup(@RequestBody GroupRequest request) {
-    return mapper.toResponse(service.create(mapper.toDomain(request)));
+    return service.create(request);
   }
 
   @PatchMapping("/{groupId}")
   public GroupResponse updateGroup(@PathVariable UUID groupId, @RequestBody GroupRequest request) {
-    return mapper.toResponse(service.update(groupId, mapper.toDomain(request)));
+    return service.update(groupId, request);
   }
 
   @DeleteMapping("/{groupId}")
@@ -66,11 +53,7 @@ public class GroupController {
 
   @GetMapping("/{groupId}/students")
   public List<User> listStudentsForGroup(@PathVariable UUID groupId) {
-    var body =
-        studentGroupHistoryService.listCurrentStudents(groupId).stream()
-            .map(this::toUserResponse)
-            .toList();
-    return body;
+    return studentGroupHistoryService.listCurrentStudents(groupId);
   }
 
   @PostMapping("/{groupId}/students/{studentId}")
@@ -91,18 +74,5 @@ public class GroupController {
       @RequestParam(required = false) LocalDate endDate) {
     studentGroupHistoryService.unenroll(
         groupId, studentId, endDate != null ? endDate : LocalDate.now());
-  }
-
-  private User toUserResponse(JUser u) {
-    return new User(
-        u.getId(),
-        u.getReference(),
-        u.getFirstName(),
-        u.getLastName(),
-        u.getEmail(),
-        u.getUserRole(),
-        u.getSpecialtyId(),
-        u.getEntryYear(),
-        u.getCreatedAt());
   }
 }

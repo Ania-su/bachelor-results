@@ -6,11 +6,11 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import school.hei.demo.domain.mappers.StudentGroupHistoryMapper;
+import school.hei.demo.endpoint.rest.controller.mapper.UserRestMapper;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.StudentGroupHistoryRepository;
 import school.hei.demo.repository.UserRepository;
 import school.hei.demo.repository.model.JStudentGroupHistory;
-import school.hei.demo.repository.model.JUser;
 
 @Service
 @AllArgsConstructor
@@ -19,10 +19,12 @@ public class StudentGroupHistoryService {
   private final StudentGroupHistoryRepository repository;
   private final StudentGroupHistoryMapper mapper;
   private final UserRepository userRepository;
+  private final UserRestMapper userRestMapper;
 
-  public List<JUser> listCurrentStudents(UUID groupId) {
+  public List<school.hei.demo.domain.dto.response.User> listCurrentStudents(UUID groupId) {
     return repository.findCurrentByGroupId(groupId).stream()
         .map(JStudentGroupHistory::getStudent)
+        .map(userRestMapper::toResponse)
         .toList();
   }
 

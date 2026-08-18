@@ -17,7 +17,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import school.hei.demo.domain.dto.request.ExamRequest;
+import school.hei.demo.domain.dto.response.ExamResponse;
 import school.hei.demo.domain.mappers.ExamMapper;
+import school.hei.demo.endpoint.rest.controller.mapper.ExamRestMapper;
 import school.hei.demo.entity.Exam;
 import school.hei.demo.entity.User;
 import school.hei.demo.enums.CodeType;
@@ -43,6 +46,7 @@ class ExamServiceTest {
   @Mock CourseAssignmentRepository courseAssignmentRepository;
   @Mock CourseSpecialtyRepository courseSpecialtyRepository;
   @Mock SpecialtyRepository specialtyRepository;
+  @Mock ExamRestMapper restMapper;
   @InjectMocks ExamService service;
 
   @BeforeEach
@@ -62,27 +66,35 @@ class ExamServiceTest {
             .course(JCourse.builder().id(courseId).build())
             .build();
     Exam exam = new Exam(entity.getId(), courseId, Instant.now(), BigDecimal.ONE);
+    ExamResponse response =
+        new ExamResponse(entity.getId(), courseId, exam.getDateExam(), BigDecimal.ONE);
     when(repository.findAllByCourse_Id(courseId)).thenReturn(List.of(entity));
     when(mapper.toDomain(entity)).thenReturn(exam);
+    when(restMapper.toResponse(exam)).thenReturn(response);
 
-    assertEquals(List.of(exam), service.listForCourse(courseId));
+    assertEquals(List.of(response), service.listForCourse(courseId));
   }
 
   @Test
   void shouldCreateUpdateAndDeleteExam() {
     UUID courseId = UUID.randomUUID();
     UUID examId = UUID.randomUUID();
-    Exam request = new Exam(null, null, Instant.now(), BigDecimal.valueOf(0.5));
+    ExamRequest request = new ExamRequest(Instant.now(), BigDecimal.valueOf(0.5));
+    Exam domain = new Exam(null, null, request.getDateExam(), request.getCoef());
     Exam saved = new Exam(examId, courseId, request.getDateExam(), request.getCoef());
+    ExamResponse savedResponse =
+        new ExamResponse(examId, courseId, request.getDateExam(), request.getCoef());
     JExam entity =
         JExam.builder().id(examId).course(JCourse.builder().id(courseId).build()).build();
+    when(restMapper.toDomain(request)).thenReturn(domain);
     when(mapper.toEntity(any(Exam.class))).thenReturn(entity);
     when(repository.save(entity)).thenReturn(entity);
     when(mapper.toDomain(entity)).thenReturn(saved);
+    when(restMapper.toResponse(saved)).thenReturn(savedResponse);
     when(repository.findById(examId)).thenReturn(Optional.of(entity));
 
-    assertEquals(saved, service.create(courseId, request));
-    assertEquals(saved, service.update(courseId, examId, request));
+    assertEquals(savedResponse, service.create(courseId, request));
+    assertEquals(savedResponse, service.update(courseId, examId, request));
     service.delete(courseId, examId);
     verify(repository).deleteById(examId);
   }
@@ -92,6 +104,8 @@ class ExamServiceTest {
     UUID courseId = UUID.randomUUID();
     UUID otherCourseId = UUID.randomUUID();
     UUID examId = UUID.randomUUID();
+    when(restMapper.toDomain(any(ExamRequest.class)))
+        .thenReturn(new Exam(null, null, Instant.now(), BigDecimal.ONE));
     when(repository.findById(examId)).thenReturn(Optional.empty());
     assertThrows(NotFoundException.class, () -> service.get(courseId, examId));
     assertThrows(NotFoundException.class, () -> service.update(courseId, examId, validExam()));
@@ -153,14 +167,17 @@ class ExamServiceTest {
     Exam old =
         new Exam(
             oldEntity.getId(), courseId, Instant.parse("2023-12-31T23:59:59Z"), BigDecimal.ONE);
+    ExamResponse allowedResponse =
+        new ExamResponse(allowedEntity.getId(), courseId, allowed.getDateExam(), BigDecimal.ONE);
     when(repository.findAllByCourse_Id(courseId)).thenReturn(List.of(allowedEntity, oldEntity));
     when(mapper.toDomain(allowedEntity)).thenReturn(allowed);
     when(mapper.toDomain(oldEntity)).thenReturn(old);
+    when(restMapper.toResponse(allowed)).thenReturn(allowedResponse);
 
-    assertEquals(List.of(allowed), service.listForCourse(courseId));
+    assertEquals(List.of(allowedResponse), service.listForCourse(courseId));
   }
 
-  private Exam validExam() {
-    return new Exam(null, null, Instant.now(), BigDecimal.ONE);
+  private ExamRequest validExam() {
+    return new ExamRequest(Instant.now(), BigDecimal.ONE);
   }
 }

@@ -11,7 +11,8 @@ import lombok.SneakyThrows;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
-import school.hei.demo.entity.Graduate;
+import school.hei.demo.domain.dto.response.GraduateResponse;
+import school.hei.demo.domain.dto.response.PromotionDownloadResponse;
 import school.hei.demo.file.bucket.BucketComponent;
 
 @Service
@@ -22,8 +23,8 @@ public class PromotionExcelService {
   private final BucketComponent bucketComponent;
 
   @SneakyThrows
-  public String generateGraduatesDownloadUrl(int academicYear) {
-    List<Graduate> graduates = promotionService.listGraduates(academicYear);
+  public PromotionDownloadResponse generateGraduatesDownload(int academicYear) {
+    List<GraduateResponse> graduates = promotionService.listGraduates(academicYear);
 
     File file = createTempFile("graduates-" + academicYear, ".xlsx");
     try (Workbook workbook = new XSSFWorkbook()) {
@@ -37,7 +38,7 @@ public class PromotionExcelService {
       header.createCell(4).setCellValue("Moyenne générale");
 
       int rowIndex = 1;
-      for (Graduate graduate : graduates) {
+      for (GraduateResponse graduate : graduates) {
         Row row = sheet.createRow(rowIndex++);
         row.createCell(0).setCellValue(graduate.getRank());
         row.createCell(1).setCellValue(graduate.getReference());
@@ -57,6 +58,7 @@ public class PromotionExcelService {
 
     String bucketKey = "promotions/" + academicYear + "/graduates.xlsx";
     bucketComponent.upload(file, bucketKey);
-    return bucketComponent.presign(bucketKey, Duration.ofMinutes(10)).toString();
+    String downloadUrl = bucketComponent.presign(bucketKey, Duration.ofMinutes(10)).toString();
+    return PromotionDownloadResponse.builder().downloadUrl(downloadUrl).build();
   }
 }

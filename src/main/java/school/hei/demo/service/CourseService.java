@@ -2,11 +2,14 @@ package school.hei.demo.service;
 
 import java.util.UUID;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import school.hei.demo.domain.dto.request.CourseRequest;
+import school.hei.demo.domain.dto.response.CoursePage;
+import school.hei.demo.domain.dto.response.CourseResponse;
+import school.hei.demo.domain.dto.response.PageMetadata;
 import school.hei.demo.domain.mappers.CourseMapper;
-import school.hei.demo.entity.Course;
+import school.hei.demo.endpoint.rest.controller.mapper.CourseRestMapper;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.CourseRepository;
 import school.hei.demo.validators.CourseValidator;
@@ -20,27 +23,40 @@ public class CourseService {
   private final CourseMapper mapper;
   private final CourseValidator validator;
   private final PaginationValidator paginationValidator;
+  private final CourseRestMapper restMapper;
 
-  public Page<Course> list(Integer semester, String search, int page, int pageSize) {
+  public CoursePage list(Integer semester, String search, int page, int pageSize) {
     paginationValidator.validate(page, pageSize);
-    return repository
-        .findAllFiltered(semester, search, PageRequest.of(page, pageSize))
-        .map(mapper::toDomain);
+    var result =
+        repository
+            .findAllFiltered(semester, search, PageRequest.of(page, pageSize))
+            .map(mapper::toDomain);
+    var body = result.getContent().stream().map(restMapper::toResponse).toList();
+    return new CoursePage(
+        body,
+        new PageMetadata(
+            result.getNumber(),
+            result.getSize(),
+            Math.toIntExact(result.getTotalElements()),
+            result.getTotalPages()));
   }
 
-  public Course get(UUID id) {
-    return repository
-        .findById(id)
-        .map(mapper::toDomain)
-        .orElseThrow(() -> new NotFoundException("Course " + id + " not found"));
+  public CourseResponse get(UUID id) {
+    return restMapper.toResponse(
+        repository
+            .findById(id)
+            .map(mapper::toDomain)
+            .orElseThrow(() -> new NotFoundException("Course " + id + " not found")));
   }
 
-  public Course create(Course course) {
+  public CourseResponse create(CourseRequest request) {
+    var course = restMapper.toDomain(request);
     validator.validate(course);
-    return mapper.toDomain(repository.save(mapper.toEntity(course)));
+    return restMapper.toResponse(mapper.toDomain(repository.save(mapper.toEntity(course))));
   }
 
-  public Course update(UUID id, Course updated) {
+  public CourseResponse update(UUID id, CourseRequest request) {
+    var updated = restMapper.toDomain(request);
     validator.validate(updated);
     var existing =
         repository
@@ -50,7 +66,7 @@ public class CourseService {
     existing.setTitle(updated.getTitle());
     existing.setSemester(updated.getSemester());
     existing.setCredits(updated.getCredits());
-    return mapper.toDomain(repository.save(existing));
+    return restMapper.toResponse(mapper.toDomain(repository.save(existing)));
   }
 
   public void delete(UUID id) {

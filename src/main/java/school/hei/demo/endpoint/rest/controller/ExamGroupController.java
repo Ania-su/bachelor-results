@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import school.hei.demo.domain.dto.request.ExamGroupRequest;
 import school.hei.demo.domain.dto.response.ExamGroupResponse;
-import school.hei.demo.endpoint.rest.controller.mapper.ExamGroupRestMapper;
 import school.hei.demo.service.ExamGroupService;
 
 @RestController
@@ -16,19 +15,17 @@ import school.hei.demo.service.ExamGroupService;
 public class ExamGroupController {
 
   private final ExamGroupService service;
-  private final ExamGroupRestMapper mapper;
 
   @GetMapping
   public List<ExamGroupResponse> listExamGroups(
       @PathVariable UUID courseId, @PathVariable UUID examId) {
-    var body = service.listForExam(courseId, examId).stream().map(mapper::toResponse).toList();
-    return body;
+    return service.listForExam(courseId, examId);
   }
 
   @GetMapping("/{examGroupId}")
   public ExamGroupResponse getExamGroup(
       @PathVariable UUID courseId, @PathVariable UUID examId, @PathVariable UUID examGroupId) {
-    return mapper.toResponse(service.get(courseId, examId, examGroupId));
+    return service.get(courseId, examId, examGroupId);
   }
 
   @PostMapping
@@ -37,8 +34,7 @@ public class ExamGroupController {
       @PathVariable UUID courseId,
       @PathVariable UUID examId,
       @RequestBody ExamGroupRequest request) {
-    var created = mapper.toResponse(service.create(courseId, examId, mapper.toDomain(request)));
-    return created;
+    return service.create(courseId, examId, request);
   }
 
   @DeleteMapping("/{examGroupId}")

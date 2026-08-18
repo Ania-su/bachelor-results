@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import school.hei.demo.domain.dto.request.ExamRequest;
 import school.hei.demo.domain.dto.response.ExamResponse;
-import school.hei.demo.endpoint.rest.controller.mapper.ExamRestMapper;
 import school.hei.demo.service.ExamService;
 
 @RestController
@@ -16,31 +15,27 @@ import school.hei.demo.service.ExamService;
 public class ExamController {
 
   private final ExamService service;
-  private final ExamRestMapper mapper;
 
   @GetMapping
   public List<ExamResponse> listExams(@PathVariable UUID courseId) {
-    var body = service.listForCourse(courseId).stream().map(mapper::toResponse).toList();
-    return body;
+    return service.listForCourse(courseId);
   }
 
   @GetMapping("/{examId}")
   public ExamResponse getExam(@PathVariable UUID courseId, @PathVariable UUID examId) {
-    return mapper.toResponse(service.get(courseId, examId));
+    return service.get(courseId, examId);
   }
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public ExamResponse createExam(@PathVariable UUID courseId, @RequestBody ExamRequest request) {
-    var created = mapper.toResponse(service.create(courseId, mapper.toDomain(request)));
-    return created;
+    return service.create(courseId, request);
   }
 
   @PatchMapping("/{examId}")
   public ExamResponse updateExam(
       @PathVariable UUID courseId, @PathVariable UUID examId, @RequestBody ExamRequest request) {
-    var updated = mapper.toResponse(service.update(courseId, examId, mapper.toDomain(request)));
-    return updated;
+    return service.update(courseId, examId, request);
   }
 
   @DeleteMapping("/{examId}")

@@ -14,7 +14,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import school.hei.demo.domain.dto.request.SpecialtyRequest;
+import school.hei.demo.domain.dto.response.SpecialtyResponse;
 import school.hei.demo.domain.mappers.SpecialtyMapper;
+import school.hei.demo.endpoint.rest.controller.mapper.SpecialtyRestMapper;
 import school.hei.demo.entity.Specialty;
 import school.hei.demo.enums.CodeType;
 import school.hei.demo.exception.NotFoundException;
@@ -27,19 +30,25 @@ class SpecialtyServiceTest {
   @Mock SpecialtyRepository repository;
   @Mock SpecialtyMapper mapper;
   @Mock SpecialtyValidator validator;
+  @Mock SpecialtyRestMapper restMapper;
   @InjectMocks SpecialtyService service;
 
   @Test
   void shouldListCreateUpdateAndDelete() {
     UUID id = UUID.randomUUID();
     JSpecialty entity = new JSpecialty(id, CodeType.EL, "Software");
-    Specialty request = new Specialty(null, CodeType.EL, "Software");
+    SpecialtyRequest request = new SpecialtyRequest(CodeType.EL, "Software");
+    Specialty domain = new Specialty(null, CodeType.EL, "Software");
+    Specialty saved = new Specialty(id, CodeType.EL, "Software");
+    SpecialtyResponse response = new SpecialtyResponse(id, CodeType.EL, "Software");
     when(repository.findAll()).thenReturn(List.of(entity));
     when(repository.save(any())).thenReturn(entity);
     when(repository.findById(id)).thenReturn(Optional.of(entity));
     when(repository.existsById(id)).thenReturn(true);
     when(mapper.toEntity(any())).thenReturn(entity);
-    when(mapper.toDomain(entity)).thenReturn(new Specialty(id, CodeType.EL, "Software"));
+    when(mapper.toDomain(entity)).thenReturn(saved);
+    when(restMapper.toDomain(request)).thenReturn(domain);
+    when(restMapper.toResponse(any(Specialty.class))).thenReturn(response);
     assertEquals(1, service.list().size());
     assertEquals(id, service.create(request).getId());
     assertEquals("Software", service.update(id, request).getLabel());
@@ -55,7 +64,7 @@ class SpecialtyServiceTest {
     assertThrows(NotFoundException.class, () -> service.get(id));
     assertThrows(
         NotFoundException.class,
-        () -> service.update(id, new Specialty(null, CodeType.EL, "Software")));
+        () -> service.update(id, new SpecialtyRequest(CodeType.EL, "Software")));
     assertThrows(NotFoundException.class, () -> service.delete(id));
   }
 }
