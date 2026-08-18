@@ -736,7 +736,7 @@ paths:
   /me/transcript-email:
     get:
       tags: [Students]
-      summary: Download the authenticated student's transcript
+      summary: Get the authenticated student's transcript
       operationId: downloadMyTranscript
       x-roles: [STUDENT]
       security: [{ bearerAuth: [] }]
@@ -744,10 +744,12 @@ paths:
         - $ref: '#/components/parameters/TranscriptYear'
       responses:
         '200':
-          description: PDF transcript
+          description: Authenticated student's transcript
           content:
-            application/pdf:
-              schema: { type: string, format: binary }
+            application/json:
+              schema: { $ref: '#/components/schemas/StudentTranscript' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
 
   /student/{studentId}/transcript:
     get:

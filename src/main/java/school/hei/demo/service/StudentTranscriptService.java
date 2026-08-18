@@ -1,9 +1,16 @@
 package school.hei.demo.service;
 
+import static java.io.File.createTempFile;
+
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.time.Duration;
 import java.util.Comparator;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import school.hei.demo.domain.dto.response.CourseAverageResponse;
@@ -12,6 +19,7 @@ import school.hei.demo.domain.dto.response.User;
 import school.hei.demo.domain.dto.response.YearTranscriptResponse;
 import school.hei.demo.domain.mappers.UserMapper;
 import school.hei.demo.exception.NotFoundException;
+import school.hei.demo.file.bucket.BucketComponent;
 import school.hei.demo.repository.CourseRepository;
 import school.hei.demo.repository.GradeRepository;
 import school.hei.demo.repository.UserRepository;
@@ -24,6 +32,8 @@ public class StudentTranscriptService {
   private final GradeRepository gradeRepository;
   private final UserMapper userMapper;
   private final StudentCourseGradeService studentCourseGradeService;
+  private final BucketComponent bucketComponent;
+  private final TranscriptHtmlService transcriptHtmlService;
 
   @Transactional(readOnly = true)
   public StudentTranscriptResponse get(UUID studentId, Integer year) {
@@ -99,6 +109,31 @@ public class StudentTranscriptService {
 
     return new StudentTranscriptResponse(
         toResponse(user), years, isOfficial, totalCredits, validatedCredits);
+  }
+
+  @SneakyThrows
+  @Transactional(readOnly = true)
+  public String getTranscriptPdfUrl(UUID studentId, Integer year) {
+    var transcript = get(studentId, year);
+    var html = transcriptHtmlService.toHtml(transcript);
+    var fileSuffix = ".pdf";
+    var filePrefix = "transcript-" + studentId;
+    var bucketKey = "transcripts/" + studentId + fileSuffix;
+    var fileToUpload = createTempFile(filePrefix, fileSuffix);
+    writeTranscriptIntoFile(html, fileToUpload);
+    bucketComponent.upload(fileToUpload, bucketKey);
+    return bucketComponent.presign(bucketKey, Duration.ofMinutes(10)).toString();
+  }
+
+  @SneakyThrows
+  private void writeTranscriptIntoFile(String html, File file) {
+    var builder = new PdfRendererBuilder();
+    builder.useFastMode();
+    builder.withHtmlContent(html, null);
+    try (var outputStream = new FileOutputStream(file)) {
+      builder.toStream(outputStream);
+      builder.run();
+    }
   }
 
   private record CourseTranscriptData(CourseAverageResponse course, boolean hasAllGrades) {}
