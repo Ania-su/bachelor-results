@@ -24,7 +24,7 @@ public class PromotionViewController {
 
   @GetMapping("/web/promotions/{academicYear}/download")
   public String downloadGraduates(@PathVariable int academicYear) {
-    String url = promotionExcelService.generateGraduatesDownloadUrl(academicYear);
+    String url = promotionExcelService.generateGraduatesDownload(academicYear).getDownloadUrl();
     return "redirect:" + url;
   }
 }
