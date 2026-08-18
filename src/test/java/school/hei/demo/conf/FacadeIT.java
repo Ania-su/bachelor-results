@@ -33,6 +33,7 @@ public class FacadeIT {
   static void configureProperties(DynamicPropertyRegistry registry) {
     POSTGRES_CONF.configureProperties(registry);
     registry.add("spring.jwt.secret", () -> "test-jwt-secret-that-is-at-least-32-bytes-long");
+    new EventConf().configureProperties(registry);
     new BucketConf().configureProperties(registry);
     new EmailConf().configureProperties(registry);
 

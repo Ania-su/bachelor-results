@@ -1,15 +1,21 @@
 package school.hei.demo.endpoint.rest.controller;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import school.hei.demo.domain.dto.request.GroupRequest;
 import school.hei.demo.domain.dto.response.GroupPage;
 import school.hei.demo.domain.dto.response.GroupResponse;
 import school.hei.demo.domain.dto.response.PageMetadata;
+import school.hei.demo.domain.dto.response.User;
 import school.hei.demo.endpoint.rest.controller.mapper.GroupRestMapper;
+import school.hei.demo.repository.model.JUser;
 import school.hei.demo.service.GroupService;
+import school.hei.demo.service.StudentGroupHistoryService;
 
 @RestController
 @RequestMapping("/groups")
@@ -18,6 +24,7 @@ public class GroupController {
 
   private final GroupService service;
   private final GroupRestMapper mapper;
+  private final StudentGroupHistoryService studentGroupHistoryService;
 
   @GetMapping
   public GroupPage listGroups(
@@ -56,5 +63,47 @@ public class GroupController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void deleteGroup(@PathVariable UUID groupId) {
     service.delete(groupId);
+  }
+
+  @GetMapping("/{groupId}/students")
+  public ResponseEntity<List<User>> listStudentsForGroup(@PathVariable UUID groupId) {
+    var body =
+        studentGroupHistoryService.listCurrentStudents(groupId).stream()
+            .map(this::toUserResponse)
+            .toList();
+    return ResponseEntity.ok(body);
+  }
+
+  @PostMapping("/{groupId}/students/{studentId}")
+  public ResponseEntity<Void> enrollStudent(
+      @PathVariable UUID groupId,
+      @PathVariable UUID studentId,
+      @RequestParam(required = false) LocalDate startDate) {
+    studentGroupHistoryService.enroll(
+        studentId, groupId, startDate != null ? startDate : LocalDate.now());
+    return ResponseEntity.status(HttpStatus.CREATED).build();
+  }
+
+  @DeleteMapping("/{groupId}/students/{studentId}")
+  public ResponseEntity<Void> unenrollStudent(
+      @PathVariable UUID groupId,
+      @PathVariable UUID studentId,
+      @RequestParam(required = false) LocalDate endDate) {
+    studentGroupHistoryService.unenroll(
+        groupId, studentId, endDate != null ? endDate : LocalDate.now());
+    return ResponseEntity.noContent().build();
+  }
+
+  private User toUserResponse(JUser u) {
+    return new User(
+        u.getId(),
+        u.getReference(),
+        u.getFirstName(),
+        u.getLastName(),
+        u.getEmail(),
+        u.getUserRole(),
+        u.getSpecialtyId(),
+        u.getEntryYear(),
+        u.getCreatedAt());
   }
 }
