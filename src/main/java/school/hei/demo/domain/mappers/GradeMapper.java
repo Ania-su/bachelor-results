@@ -2,6 +2,8 @@ package school.hei.demo.domain.mappers;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
+import school.hei.demo.domain.dto.request.GradeCreate;
+import school.hei.demo.domain.dto.response.GradeResponse;
 import school.hei.demo.entity.Grade;
 import school.hei.demo.repository.ExamRepository;
 import school.hei.demo.repository.UserRepository;
@@ -12,6 +14,22 @@ import school.hei.demo.repository.model.JGrade;
 public class GradeMapper {
   private final UserRepository userRepository;
   private final ExamRepository examRepository;
+
+  public GradeResponse toResponse(Grade grade) {
+    if (grade == null) return null;
+    return GradeResponse.builder()
+        .id(grade.getId())
+        .studentId(grade.getStudentId())
+        .examId(grade.getExamId())
+        .value(grade.getValue())
+        .updatedAt(grade.getUpdatedAt())
+        .build();
+  }
+
+  public Grade toDomain(GradeCreate request) {
+    if (request == null) return null;
+    return Grade.builder().studentId(request.getStudentId()).value(request.getValue()).build();
+  }
 
   public Grade toDomain(JGrade grade) {
     if (grade == null) return null;

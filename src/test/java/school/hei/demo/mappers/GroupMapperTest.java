@@ -24,7 +24,7 @@ class GroupMapperTest {
 
   @Test
   void shouldReturnNullForNull() {
-    assertNull(mapper.toDomain(null));
+    assertNull(mapper.toDomain((JGroup) null));
     assertNull(mapper.toEntity(null));
   }
 }

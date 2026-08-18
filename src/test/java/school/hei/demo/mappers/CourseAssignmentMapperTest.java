@@ -44,7 +44,7 @@ class CourseAssignmentMapperTest {
   @Test
   void shouldReturnNullForNull() {
     CourseAssignmentMapper mapper = new CourseAssignmentMapper(courseRepository, groupRepository);
-    assertNull(mapper.toDomain(null));
+    assertNull(mapper.toDomain((JCourseAssignment) null));
     assertNull(mapper.toEntity(null));
   }
 }

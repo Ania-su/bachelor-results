@@ -40,7 +40,7 @@ class ExamMapperTest {
   @Test
   void shouldReturnNullForNull() {
     ExamMapper mapper = new ExamMapper(courseRepository);
-    assertNull(mapper.toDomain(null));
+    assertNull(mapper.toDomain((JExam) null));
     assertNull(mapper.toEntity(null));
   }
 }

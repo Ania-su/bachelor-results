@@ -18,14 +18,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import school.hei.demo.domain.dto.request.GroupRequest;
+import school.hei.demo.domain.dto.response.GroupPage;
+import school.hei.demo.domain.dto.response.GroupResponse;
+import school.hei.demo.domain.dto.response.PageMetadata;
 import school.hei.demo.endpoint.rest.controller.GroupController;
-import school.hei.demo.endpoint.rest.controller.mapper.GroupRestMapper;
-import school.hei.demo.entity.Group;
 import school.hei.demo.exception.BadRequestException;
 import school.hei.demo.exception.ConflictException;
 import school.hei.demo.exception.GlobalExceptionHandler;
@@ -43,8 +42,7 @@ class GroupControllerTest {
   @BeforeEach
   void setUp() {
     mockMvc =
-        MockMvcBuilders.standaloneSetup(
-                new GroupController(service, new GroupRestMapper(), studentGroupHistoryService))
+        MockMvcBuilders.standaloneSetup(new GroupController(service, studentGroupHistoryService))
             .setControllerAdvice(new GlobalExceptionHandler())
             .build();
     objectMapper = new ObjectMapper().findAndRegisterModules();
@@ -53,11 +51,12 @@ class GroupControllerTest {
   @Test
   void shouldCreateListWithFilterUpdateAndDelete() throws Exception {
     UUID id = UUID.randomUUID();
-    Group group = new Group(id, "A1", 2025);
-    when(service.create(any())).thenReturn(group);
+    GroupResponse group = new GroupResponse(id, "A1", 2025);
+    when(service.create(any(GroupRequest.class))).thenReturn(group);
     when(service.list(2025, 1, 2))
-        .thenReturn(new PageImpl<>(List.of(group), PageRequest.of(1, 2), 3));
-    when(service.update(org.mockito.ArgumentMatchers.eq(id), any())).thenReturn(group);
+        .thenReturn(new GroupPage(List.of(group), new PageMetadata(1, 2, 3, 2)));
+    when(service.update(org.mockito.ArgumentMatchers.eq(id), any(GroupRequest.class)))
+        .thenReturn(group);
     mockMvc
         .perform(
             post("/groups")
@@ -83,8 +82,10 @@ class GroupControllerTest {
   void shouldReturnExpectedErrors() throws Exception {
     UUID id = UUID.randomUUID();
     lenient().when(service.get(id)).thenThrow(new NotFoundException("missing"));
-    lenient().when(service.create(any(Group.class))).thenThrow(new ConflictException("duplicate"));
-    lenient().doThrow(new BadRequestException("invalid")).when(service).create((Group) null);
+    lenient()
+        .when(service.create(any(GroupRequest.class)))
+        .thenThrow(new ConflictException("duplicate"));
+    lenient().doThrow(new BadRequestException("invalid")).when(service).create((GroupRequest) null);
     mockMvc.perform(get("/groups/{id}", id)).andExpect(status().isNotFound());
     mockMvc
         .perform(post("/groups").contentType("application/json").content("null"))

@@ -4,8 +4,9 @@ import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import school.hei.demo.domain.dto.request.SpecialtyRequest;
+import school.hei.demo.domain.dto.response.SpecialtyResponse;
 import school.hei.demo.domain.mappers.SpecialtyMapper;
-import school.hei.demo.entity.Specialty;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.SpecialtyRepository;
 import school.hei.demo.validators.SpecialtyValidator;
@@ -18,23 +19,26 @@ public class SpecialtyService {
   private final SpecialtyMapper mapper;
   private final SpecialtyValidator validator;
 
-  public List<Specialty> list() {
-    return repository.findAll().stream().map(mapper::toDomain).toList();
+  public List<SpecialtyResponse> list() {
+    return repository.findAll().stream().map(mapper::toDomain).map(mapper::toResponse).toList();
   }
 
-  public Specialty get(UUID id) {
-    return repository
-        .findById(id)
-        .map(mapper::toDomain)
-        .orElseThrow(() -> new NotFoundException("Specialty " + id + " not found"));
+  public SpecialtyResponse get(UUID id) {
+    return mapper.toResponse(
+        repository
+            .findById(id)
+            .map(mapper::toDomain)
+            .orElseThrow(() -> new NotFoundException("Specialty " + id + " not found")));
   }
 
-  public Specialty create(Specialty specialty) {
+  public SpecialtyResponse create(SpecialtyRequest request) {
+    var specialty = mapper.toDomain(request);
     validator.validate(specialty);
-    return mapper.toDomain(repository.save(mapper.toEntity(specialty)));
+    return mapper.toResponse(mapper.toDomain(repository.save(mapper.toEntity(specialty))));
   }
 
-  public Specialty update(UUID id, Specialty updated) {
+  public SpecialtyResponse update(UUID id, SpecialtyRequest request) {
+    var updated = mapper.toDomain(request);
     validator.validate(updated);
     var existing =
         repository
@@ -42,7 +46,7 @@ public class SpecialtyService {
             .orElseThrow(() -> new NotFoundException("Specialty " + id + " not found"));
     existing.setCode(updated.getCode());
     existing.setLabel(updated.getLabel());
-    return mapper.toDomain(repository.save(existing));
+    return mapper.toResponse(mapper.toDomain(repository.save(existing)));
   }
 
   public void delete(UUID id) {

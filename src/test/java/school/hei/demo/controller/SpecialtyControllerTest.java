@@ -21,9 +21,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import school.hei.demo.domain.dto.request.SpecialtyRequest;
+import school.hei.demo.domain.dto.response.SpecialtyResponse;
 import school.hei.demo.endpoint.rest.controller.SpecialtyController;
-import school.hei.demo.endpoint.rest.controller.mapper.SpecialtyRestMapper;
-import school.hei.demo.entity.Specialty;
 import school.hei.demo.enums.CodeType;
 import school.hei.demo.exception.BadRequestException;
 import school.hei.demo.exception.ConflictException;
@@ -40,7 +39,7 @@ class SpecialtyControllerTest {
   @BeforeEach
   void setUp() {
     mockMvc =
-        MockMvcBuilders.standaloneSetup(new SpecialtyController(service, new SpecialtyRestMapper()))
+        MockMvcBuilders.standaloneSetup(new SpecialtyController(service))
             .setControllerAdvice(new GlobalExceptionHandler())
             .build();
     objectMapper = new ObjectMapper().findAndRegisterModules();
@@ -49,11 +48,12 @@ class SpecialtyControllerTest {
   @Test
   void shouldCreateListUpdateAndDelete() throws Exception {
     UUID id = UUID.randomUUID();
-    Specialty specialty = new Specialty(id, CodeType.EL, "Software");
+    SpecialtyResponse specialty = new SpecialtyResponse(id, CodeType.EL, "Software");
     SpecialtyRequest request = new SpecialtyRequest(CodeType.EL, "Software");
     when(service.list()).thenReturn(List.of(specialty));
-    when(service.create(any())).thenReturn(specialty);
-    when(service.update(org.mockito.ArgumentMatchers.eq(id), any())).thenReturn(specialty);
+    when(service.create(any(SpecialtyRequest.class))).thenReturn(specialty);
+    when(service.update(org.mockito.ArgumentMatchers.eq(id), any(SpecialtyRequest.class)))
+        .thenReturn(specialty);
     mockMvc
         .perform(get("/specialties"))
         .andExpect(status().isOk())
@@ -78,9 +78,12 @@ class SpecialtyControllerTest {
     UUID id = UUID.randomUUID();
     lenient().when(service.get(id)).thenThrow(new NotFoundException("missing"));
     lenient()
-        .when(service.create(any(Specialty.class)))
+        .when(service.create(any(SpecialtyRequest.class)))
         .thenThrow(new ConflictException("duplicate"));
-    lenient().doThrow(new BadRequestException("invalid")).when(service).create((Specialty) null);
+    lenient()
+        .doThrow(new BadRequestException("invalid"))
+        .when(service)
+        .create((SpecialtyRequest) null);
     SpecialtyRequest request = new SpecialtyRequest(CodeType.EL, "Software");
     mockMvc.perform(get("/specialties/{id}", id)).andExpect(status().isNotFound());
     mockMvc

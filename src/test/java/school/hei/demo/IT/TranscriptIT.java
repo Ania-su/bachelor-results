@@ -119,7 +119,7 @@ class TranscriptIT extends FacadeIT {
     }
     verify(bucketComponent).presign(anyString(), any(Duration.class));
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"unchecked"})
     ArgumentCaptor<Collection<SendEmailRequested>> eventCaptor =
         ArgumentCaptor.forClass(Collection.class);
     verify(eventProducer).accept(eventCaptor.capture());

@@ -4,11 +4,9 @@ import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import school.hei.demo.domain.dto.request.ExamGroupRequest;
 import school.hei.demo.domain.dto.response.ExamGroupResponse;
-import school.hei.demo.endpoint.rest.controller.mapper.ExamGroupRestMapper;
 import school.hei.demo.service.ExamGroupService;
 
 @RestController
@@ -17,34 +15,32 @@ import school.hei.demo.service.ExamGroupService;
 public class ExamGroupController {
 
   private final ExamGroupService service;
-  private final ExamGroupRestMapper mapper;
 
   @GetMapping
-  public ResponseEntity<List<ExamGroupResponse>> listExamGroups(
+  public List<ExamGroupResponse> listExamGroups(
       @PathVariable UUID courseId, @PathVariable UUID examId) {
-    var body = service.listForExam(courseId, examId).stream().map(mapper::toResponse).toList();
-    return ResponseEntity.ok(body);
+    return service.listForExam(courseId, examId);
   }
 
   @GetMapping("/{examGroupId}")
-  public ResponseEntity<ExamGroupResponse> getExamGroup(
+  public ExamGroupResponse getExamGroup(
       @PathVariable UUID courseId, @PathVariable UUID examId, @PathVariable UUID examGroupId) {
-    return ResponseEntity.ok(mapper.toResponse(service.get(courseId, examId, examGroupId)));
+    return service.get(courseId, examId, examGroupId);
   }
 
   @PostMapping
-  public ResponseEntity<ExamGroupResponse> createExamGroup(
+  @ResponseStatus(HttpStatus.CREATED)
+  public ExamGroupResponse createExamGroup(
       @PathVariable UUID courseId,
       @PathVariable UUID examId,
       @RequestBody ExamGroupRequest request) {
-    var created = mapper.toResponse(service.create(courseId, examId, mapper.toDomain(request)));
-    return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    return service.create(courseId, examId, request);
   }
 
   @DeleteMapping("/{examGroupId}")
-  public ResponseEntity<Void> deleteExamGroup(
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void deleteExamGroup(
       @PathVariable UUID courseId, @PathVariable UUID examId, @PathVariable UUID examGroupId) {
     service.delete(courseId, examId, examGroupId);
-    return ResponseEntity.noContent().build();
   }
 }
