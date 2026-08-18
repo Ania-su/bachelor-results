@@ -6,7 +6,6 @@ import java.util.*;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import school.hei.demo.entity.Graduate;
-import school.hei.demo.enums.CodeType;
 import school.hei.demo.enums.UserRole;
 import school.hei.demo.repository.CourseSpecialtyRepository;
 import school.hei.demo.repository.GradeRepository;
@@ -29,7 +28,7 @@ public class GraduateComputationService {
     for (JUser candidate : candidates) {
       var requiredCourseIds =
           courseSpecialtyRepository.findRequiredCourseIds(
-              candidate.getSpecialtyId(), CodeType.NONE);
+              candidate.getId(), candidate.getSpecialtyId());
       if (requiredCourseIds.isEmpty()) continue;
 
       var courseAverages = gradeRepository.findCourseAverages(candidate.getId(), requiredCourseIds);
