@@ -14,7 +14,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import school.hei.demo.entity.CourseAverageResult;
 import school.hei.demo.entity.Graduate;
-import school.hei.demo.enums.CodeType;
 import school.hei.demo.enums.UserRole;
 import school.hei.demo.repository.CourseSpecialtyRepository;
 import school.hei.demo.repository.GradeRepository;
@@ -35,6 +34,8 @@ class GraduateComputationServiceTest {
     u.setFirstName("A");
     u.setLastName("B");
     u.setSpecialtyId(specialtyId);
+    u.setUserRole(UserRole.STUDENT);
+    u.setEntryYear(2024);
     return u;
   }
 
@@ -48,10 +49,12 @@ class GraduateComputationServiceTest {
   @Test
   void studentWithNoRequiredCourses_isSkipped() {
     UUID specialtyId = UUID.randomUUID();
-    var s = student(specialtyId, "REF");
+    JUser s = student(specialtyId, "REF");
+
     when(userRepository.findAllByUserRoleAndEntryYear(UserRole.STUDENT, 2024))
         .thenReturn(List.of(s));
-    when(courseSpecialtyRepository.findRequiredCourseIds(specialtyId, CodeType.NONE))
+
+    when(courseSpecialtyRepository.findRequiredCourseIds(s.getId(), specialtyId))
         .thenReturn(Set.of());
     assertEquals(List.of(), service.computeGraduates(2024));
   }
@@ -60,10 +63,13 @@ class GraduateComputationServiceTest {
   void studentMissingSomeCourseAverages_isSkipped() {
     UUID specialtyId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
-    var s = student(specialtyId, "REF");
+
+    JUser s = student(specialtyId, "REF");
+
     when(userRepository.findAllByUserRoleAndEntryYear(UserRole.STUDENT, 2024))
         .thenReturn(List.of(s));
-    when(courseSpecialtyRepository.findRequiredCourseIds(specialtyId, CodeType.NONE))
+
+    when(courseSpecialtyRepository.findRequiredCourseIds(s.getId(), specialtyId))
         .thenReturn(Set.of(courseId));
     when(gradeRepository.findCourseAverages(s.getId(), Set.of(courseId))).thenReturn(List.of());
     assertEquals(List.of(), service.computeGraduates(2024));
@@ -73,10 +79,13 @@ class GraduateComputationServiceTest {
   void studentWithAverageBelowThreshold_isSkipped() {
     UUID specialtyId = UUID.randomUUID();
     UUID courseId = UUID.randomUUID();
-    var s = student(specialtyId, "REF");
+
+    JUser s = student(specialtyId, "REF");
+
     when(userRepository.findAllByUserRoleAndEntryYear(UserRole.STUDENT, 2024))
         .thenReturn(List.of(s));
-    when(courseSpecialtyRepository.findRequiredCourseIds(specialtyId, CodeType.NONE))
+
+    when(courseSpecialtyRepository.findRequiredCourseIds(s.getId(), specialtyId))
         .thenReturn(Set.of(courseId));
     when(gradeRepository.findCourseAverages(s.getId(), Set.of(courseId)))
         .thenReturn(
@@ -94,10 +103,12 @@ class GraduateComputationServiceTest {
     UUID specialtyId = UUID.randomUUID();
     UUID c1 = UUID.randomUUID();
     UUID c2 = UUID.randomUUID();
-    var s = student(specialtyId, "REF");
+
+    JUser s = student(specialtyId, "REF");
+
     when(userRepository.findAllByUserRoleAndEntryYear(UserRole.STUDENT, 2024))
         .thenReturn(List.of(s));
-    when(courseSpecialtyRepository.findRequiredCourseIds(specialtyId, CodeType.NONE))
+    when(courseSpecialtyRepository.findRequiredCourseIds(s.getId(), specialtyId))
         .thenReturn(Set.of(c1, c2));
     when(gradeRepository.findCourseAverages(s.getId(), Set.of(c1, c2)))
         .thenReturn(
@@ -125,26 +136,34 @@ class GraduateComputationServiceTest {
   @Test
   void multipleGraduates_areRankedByAverageDescending() {
     UUID specialtyId = UUID.randomUUID();
-    UUID c1 = UUID.randomUUID();
-    var low = student(specialtyId, "LOW");
-    var high = student(specialtyId, "HIGH");
+    UUID courseId = UUID.randomUUID();
+
+    JUser low = student(specialtyId, "LOW");
+    JUser high = student(specialtyId, "HIGH");
+
     when(userRepository.findAllByUserRoleAndEntryYear(UserRole.STUDENT, 2024))
         .thenReturn(List.of(low, high));
-    when(courseSpecialtyRepository.findRequiredCourseIds(specialtyId, CodeType.NONE))
-        .thenReturn(Set.of(c1));
-    when(gradeRepository.findCourseAverages(low.getId(), Set.of(c1)))
+
+    when(courseSpecialtyRepository.findRequiredCourseIds(low.getId(), specialtyId))
+        .thenReturn(Set.of(courseId));
+
+    when(courseSpecialtyRepository.findRequiredCourseIds(high.getId(), specialtyId))
+        .thenReturn(Set.of(courseId));
+
+    when(gradeRepository.findCourseAverages(low.getId(), Set.of(courseId)))
         .thenReturn(
             List.of(
                 CourseAverageResult.builder()
-                    .courseId(c1)
+                    .courseId(courseId)
                     .credits(10)
                     .average(new BigDecimal("10"))
                     .build()));
-    when(gradeRepository.findCourseAverages(high.getId(), Set.of(c1)))
+
+    when(gradeRepository.findCourseAverages(high.getId(), Set.of(courseId)))
         .thenReturn(
             List.of(
                 CourseAverageResult.builder()
-                    .courseId(c1)
+                    .courseId(courseId)
                     .credits(10)
                     .average(new BigDecimal("15"))
                     .build()));
