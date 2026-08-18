@@ -15,8 +15,7 @@ public class MyTranscriptController {
   private final StudentTranscriptService studentTranscriptService;
 
   @GetMapping("/me/transcript-email")
-  public StudentTranscriptResponse getTranscript(
-      @RequestParam(required = false) Integer year) {
+  public StudentTranscriptResponse getTranscript(@RequestParam(required = false) Integer year) {
     return studentTranscriptService.get(currentUserService.getCurrentUser().getId(), year);
   }
 }
