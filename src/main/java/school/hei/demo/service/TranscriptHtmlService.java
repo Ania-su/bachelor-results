@@ -16,7 +16,7 @@ public class TranscriptHtmlService {
     var html = new StringBuilder();
     html.append("<!DOCTYPE html>")
         .append("<html><head><meta charset=\"UTF-8\"/><title>")
-        .append(title)
+        .append(escape(title))
         .append("</title><style>")
         .append(css())
         .append("</style></head><body>");
