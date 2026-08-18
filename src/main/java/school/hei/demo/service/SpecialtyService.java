@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import school.hei.demo.domain.dto.request.SpecialtyRequest;
 import school.hei.demo.domain.dto.response.SpecialtyResponse;
 import school.hei.demo.domain.mappers.SpecialtyMapper;
-import school.hei.demo.endpoint.rest.controller.mapper.SpecialtyRestMapper;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.SpecialtyRepository;
 import school.hei.demo.validators.SpecialtyValidator;
@@ -19,14 +18,13 @@ public class SpecialtyService {
   private final SpecialtyRepository repository;
   private final SpecialtyMapper mapper;
   private final SpecialtyValidator validator;
-  private final SpecialtyRestMapper restMapper;
 
   public List<SpecialtyResponse> list() {
-    return repository.findAll().stream().map(mapper::toDomain).map(restMapper::toResponse).toList();
+    return repository.findAll().stream().map(mapper::toDomain).map(mapper::toResponse).toList();
   }
 
   public SpecialtyResponse get(UUID id) {
-    return restMapper.toResponse(
+    return mapper.toResponse(
         repository
             .findById(id)
             .map(mapper::toDomain)
@@ -34,13 +32,13 @@ public class SpecialtyService {
   }
 
   public SpecialtyResponse create(SpecialtyRequest request) {
-    var specialty = restMapper.toDomain(request);
+    var specialty = mapper.toDomain(request);
     validator.validate(specialty);
-    return restMapper.toResponse(mapper.toDomain(repository.save(mapper.toEntity(specialty))));
+    return mapper.toResponse(mapper.toDomain(repository.save(mapper.toEntity(specialty))));
   }
 
   public SpecialtyResponse update(UUID id, SpecialtyRequest request) {
-    var updated = restMapper.toDomain(request);
+    var updated = mapper.toDomain(request);
     validator.validate(updated);
     var existing =
         repository
@@ -48,7 +46,7 @@ public class SpecialtyService {
             .orElseThrow(() -> new NotFoundException("Specialty " + id + " not found"));
     existing.setCode(updated.getCode());
     existing.setLabel(updated.getLabel());
-    return restMapper.toResponse(mapper.toDomain(repository.save(existing)));
+    return mapper.toResponse(mapper.toDomain(repository.save(existing)));
   }
 
   public void delete(UUID id) {

@@ -10,7 +10,6 @@ import school.hei.demo.domain.dto.request.GradeUpdate;
 import school.hei.demo.domain.dto.response.GradePage;
 import school.hei.demo.domain.dto.response.GradeResponse;
 import school.hei.demo.domain.mappers.GradeMapper;
-import school.hei.demo.endpoint.rest.controller.mapper.GradeRestMapper;
 import school.hei.demo.entity.Grade;
 import school.hei.demo.entity.User;
 import school.hei.demo.enums.UserRole;
@@ -36,7 +35,6 @@ public class GradeService {
   private final UserRepository userRepository;
   private final CurrentUserService currentUserService;
   private final GradeMapper mapper;
-  private final GradeRestMapper restMapper;
   private final GradeValidator validator;
   private final PaginationValidator paginationValidator;
 
@@ -65,7 +63,7 @@ public class GradeService {
     var content = grades.map(mapper::toDomain);
 
     return new GradePage(
-        content.getContent().stream().map(restMapper::toResponse).toList(),
+        content.getContent().stream().map(mapper::toResponse).toList(),
         new school.hei.demo.domain.dto.response.PageMetadata(
             content.getNumber(),
             content.getSize(),
@@ -89,7 +87,7 @@ public class GradeService {
       throw new ForbiddenException("Students can only access their own grades");
     }
 
-    return restMapper.toResponse(grade);
+    return mapper.toResponse(grade);
   }
 
   @Transactional
@@ -97,7 +95,7 @@ public class GradeService {
     ensureWriteAccess(courseId);
     validator.validateCreate(request);
 
-    var grade = restMapper.toDomain(request);
+    var grade = mapper.toDomain(request);
 
     ensureExamBelongsToCourse(courseId, examId);
 
@@ -122,7 +120,7 @@ public class GradeService {
             .changedAt(Instant.now())
             .build());
 
-    return restMapper.toResponse(createdGrade);
+    return mapper.toResponse(createdGrade);
   }
 
   @Transactional
@@ -152,7 +150,7 @@ public class GradeService {
 
     currentGrade.setValue(request.getValue());
     currentGrade.setUpdatedAt(now);
-    return restMapper.toResponse(mapper.toDomain(repository.save(mapper.toEntity(currentGrade))));
+    return mapper.toResponse(mapper.toDomain(repository.save(mapper.toEntity(currentGrade))));
   }
 
   @Transactional
@@ -169,7 +167,7 @@ public class GradeService {
     historyRepository.deleteAllByGradeId(gradeId);
     repository.deleteById(gradeId);
 
-    return restMapper.toResponse(grade);
+    return mapper.toResponse(grade);
   }
 
   private User ensureReadAccess(UUID courseId) {

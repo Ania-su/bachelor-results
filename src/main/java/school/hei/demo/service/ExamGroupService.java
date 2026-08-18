@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import school.hei.demo.domain.dto.request.ExamGroupRequest;
 import school.hei.demo.domain.dto.response.ExamGroupResponse;
 import school.hei.demo.domain.mappers.ExamGroupMapper;
-import school.hei.demo.endpoint.rest.controller.mapper.ExamGroupRestMapper;
 import school.hei.demo.entity.ExamGroup;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.ExamGroupRepository;
@@ -21,13 +20,12 @@ public class ExamGroupService {
   private final ExamGroupMapper mapper;
   private final ExamGroupValidator validator;
   private final ExamService examService;
-  private final ExamGroupRestMapper restMapper;
 
   public List<ExamGroupResponse> listForExam(UUID courseId, UUID examId) {
     examService.get(courseId, examId);
     return repository.findAllByExam_Id(examId).stream()
         .map(mapper::toDomain)
-        .map(restMapper::toResponse)
+        .map(mapper::toResponse)
         .toList();
   }
 
@@ -39,15 +37,15 @@ public class ExamGroupService {
             .map(mapper::toDomain)
             .orElseThrow(() -> new NotFoundException("ExamGroup " + examGroupId + " not found"));
     ensureBelongsToExam(examGroup, examId);
-    return restMapper.toResponse(examGroup);
+    return mapper.toResponse(examGroup);
   }
 
   public ExamGroupResponse create(UUID courseId, UUID examId, ExamGroupRequest request) {
-    var examGroup = restMapper.toDomain(request);
+    var examGroup = mapper.toDomain(request);
     examService.get(courseId, examId);
     examGroup.setExamId(examId);
     validator.validate(examGroup);
-    return restMapper.toResponse(mapper.toDomain(repository.save(mapper.toEntity(examGroup))));
+    return mapper.toResponse(mapper.toDomain(repository.save(mapper.toEntity(examGroup))));
   }
 
   public void delete(UUID courseId, UUID examId, UUID examGroupId) {

@@ -9,7 +9,6 @@ import school.hei.demo.domain.dto.response.CoursePage;
 import school.hei.demo.domain.dto.response.CourseResponse;
 import school.hei.demo.domain.dto.response.PageMetadata;
 import school.hei.demo.domain.mappers.CourseMapper;
-import school.hei.demo.endpoint.rest.controller.mapper.CourseRestMapper;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.CourseRepository;
 import school.hei.demo.validators.CourseValidator;
@@ -23,7 +22,6 @@ public class CourseService {
   private final CourseMapper mapper;
   private final CourseValidator validator;
   private final PaginationValidator paginationValidator;
-  private final CourseRestMapper restMapper;
 
   public CoursePage list(Integer semester, String search, int page, int pageSize) {
     paginationValidator.validate(page, pageSize);
@@ -31,7 +29,7 @@ public class CourseService {
         repository
             .findAllFiltered(semester, search, PageRequest.of(page, pageSize))
             .map(mapper::toDomain);
-    var body = result.getContent().stream().map(restMapper::toResponse).toList();
+    var body = result.getContent().stream().map(mapper::toResponse).toList();
     return new CoursePage(
         body,
         new PageMetadata(
@@ -42,7 +40,7 @@ public class CourseService {
   }
 
   public CourseResponse get(UUID id) {
-    return restMapper.toResponse(
+    return mapper.toResponse(
         repository
             .findById(id)
             .map(mapper::toDomain)
@@ -50,13 +48,13 @@ public class CourseService {
   }
 
   public CourseResponse create(CourseRequest request) {
-    var course = restMapper.toDomain(request);
+    var course = mapper.toDomain(request);
     validator.validate(course);
-    return restMapper.toResponse(mapper.toDomain(repository.save(mapper.toEntity(course))));
+    return mapper.toResponse(mapper.toDomain(repository.save(mapper.toEntity(course))));
   }
 
   public CourseResponse update(UUID id, CourseRequest request) {
-    var updated = restMapper.toDomain(request);
+    var updated = mapper.toDomain(request);
     validator.validate(updated);
     var existing =
         repository
@@ -66,7 +64,7 @@ public class CourseService {
     existing.setTitle(updated.getTitle());
     existing.setSemester(updated.getSemester());
     existing.setCredits(updated.getCredits());
-    return restMapper.toResponse(mapper.toDomain(repository.save(existing)));
+    return mapper.toResponse(mapper.toDomain(repository.save(existing)));
   }
 
   public void delete(UUID id) {

@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import school.hei.demo.domain.dto.request.ExamRequest;
 import school.hei.demo.domain.dto.response.ExamResponse;
 import school.hei.demo.domain.mappers.ExamMapper;
-import school.hei.demo.endpoint.rest.controller.mapper.ExamRestMapper;
 import school.hei.demo.entity.Exam;
 import school.hei.demo.entity.User;
 import school.hei.demo.enums.CodeType;
@@ -34,7 +33,6 @@ public class ExamService {
   private final CourseAssignmentRepository courseAssignmentRepository;
   private final CourseSpecialtyRepository courseSpecialtyRepository;
   private final SpecialtyRepository specialtyRepository;
-  private final ExamRestMapper restMapper;
 
   public List<ExamResponse> listForCourse(UUID courseId) {
     User currentUser = currentUserService.getCurrentUser();
@@ -42,7 +40,7 @@ public class ExamService {
 
     var exams = repository.findAllByCourse_Id(courseId).stream().map(mapper::toDomain).toList();
     if (currentUser.getUserRole() != UserRole.STUDENT) {
-      return exams.stream().map(restMapper::toResponse).toList();
+      return exams.stream().map(mapper::toResponse).toList();
     }
 
     if (!isStudentAllowedOnCourse(currentUser, courseId)) {
@@ -52,7 +50,7 @@ public class ExamService {
     Instant entryYearStart = entryYearStart(currentUser);
     return exams.stream()
         .filter(exam -> !exam.getDateExam().isBefore(entryYearStart))
-        .map(restMapper::toResponse)
+        .map(mapper::toResponse)
         .toList();
   }
 
@@ -73,19 +71,19 @@ public class ExamService {
       throw new ForbiddenException("Student is not allowed to access this exam");
     }
 
-    return restMapper.toResponse(exam);
+    return mapper.toResponse(exam);
   }
 
   public ExamResponse create(UUID courseId, ExamRequest request) {
-    var exam = restMapper.toDomain(request);
+    var exam = mapper.toDomain(request);
     ensureTeacherAssigned(currentUserService.getCurrentUser(), courseId);
     exam.setCourseId(courseId);
     validator.validate(exam);
-    return restMapper.toResponse(mapper.toDomain(repository.save(mapper.toEntity(exam))));
+    return mapper.toResponse(mapper.toDomain(repository.save(mapper.toEntity(exam))));
   }
 
   public ExamResponse update(UUID courseId, UUID examId, ExamRequest request) {
-    var updated = restMapper.toDomain(request);
+    var updated = mapper.toDomain(request);
     ensureTeacherAssigned(currentUserService.getCurrentUser(), courseId);
     updated.setCourseId(courseId);
     validator.validate(updated);
@@ -96,7 +94,7 @@ public class ExamService {
     ensureBelongsToCourse(mapper.toDomain(existing), courseId);
 
     var toSave = mapper.toEntity(updated.toBuilder().id(examId).build());
-    return restMapper.toResponse(mapper.toDomain(repository.save(toSave)));
+    return mapper.toResponse(mapper.toDomain(repository.save(toSave)));
   }
 
   public void delete(UUID courseId, UUID examId) {

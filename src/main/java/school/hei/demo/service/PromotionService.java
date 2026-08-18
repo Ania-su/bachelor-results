@@ -4,18 +4,18 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import school.hei.demo.domain.dto.response.GraduateResponse;
-import school.hei.demo.endpoint.rest.controller.mapper.GraduateRestMapper;
+import school.hei.demo.domain.mappers.GraduateMapper;
 
 @Service
 @AllArgsConstructor
 public class PromotionService {
 
   private final GraduateComputationService graduateComputationService;
-  private final GraduateRestMapper restMapper;
+  private final GraduateMapper mapper;
 
   public List<GraduateResponse> listGraduates(int academicYear) {
     return graduateComputationService.computeGraduates(academicYear).stream()
-        .map(restMapper::toResponse)
+        .map(mapper::toResponse)
         .toList();
   }
 }

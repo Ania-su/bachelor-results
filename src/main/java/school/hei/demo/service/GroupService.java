@@ -10,7 +10,6 @@ import school.hei.demo.domain.dto.response.GroupPage;
 import school.hei.demo.domain.dto.response.GroupResponse;
 import school.hei.demo.domain.dto.response.PageMetadata;
 import school.hei.demo.domain.mappers.GroupMapper;
-import school.hei.demo.endpoint.rest.controller.mapper.GroupRestMapper;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.GroupRepository;
 import school.hei.demo.validators.GroupValidator;
@@ -24,10 +23,9 @@ public class GroupService {
   private final GroupMapper mapper;
   private final GroupValidator validator;
   private final PaginationValidator paginationValidator;
-  private final GroupRestMapper restMapper;
 
   public List<GroupResponse> listAll() {
-    return repository.findAll().stream().map(mapper::toDomain).map(restMapper::toResponse).toList();
+    return repository.findAll().stream().map(mapper::toDomain).map(mapper::toResponse).toList();
   }
 
   public GroupPage list(Integer academicYear, int page, int pageSize) {
@@ -36,7 +34,7 @@ public class GroupService {
         repository
             .findAllFiltered(academicYear, PageRequest.of(page, pageSize))
             .map(mapper::toDomain);
-    var body = result.getContent().stream().map(restMapper::toResponse).toList();
+    var body = result.getContent().stream().map(mapper::toResponse).toList();
     return new GroupPage(
         body,
         new PageMetadata(
@@ -47,7 +45,7 @@ public class GroupService {
   }
 
   public GroupResponse get(UUID id) {
-    return restMapper.toResponse(
+    return mapper.toResponse(
         repository
             .findById(id)
             .map(mapper::toDomain)
@@ -55,13 +53,13 @@ public class GroupService {
   }
 
   public GroupResponse create(GroupRequest request) {
-    var group = restMapper.toDomain(request);
+    var group = mapper.toDomain(request);
     validator.validate(group);
-    return restMapper.toResponse(mapper.toDomain(repository.save(mapper.toEntity(group))));
+    return mapper.toResponse(mapper.toDomain(repository.save(mapper.toEntity(group))));
   }
 
   public GroupResponse update(UUID id, GroupRequest request) {
-    var updated = restMapper.toDomain(request);
+    var updated = mapper.toDomain(request);
     validator.validate(updated);
     var existing =
         repository
@@ -69,7 +67,7 @@ public class GroupService {
             .orElseThrow(() -> new NotFoundException("Group " + id + " not found"));
     existing.setReference(updated.getReference());
     existing.setAcademicYear(updated.getAcademicYear());
-    return restMapper.toResponse(mapper.toDomain(repository.save(existing)));
+    return mapper.toResponse(mapper.toDomain(repository.save(existing)));
   }
 
   public void delete(UUID id) {
