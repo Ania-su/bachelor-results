@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import school.hei.demo.domain.dto.request.GroupRequest;
 import school.hei.demo.domain.dto.response.GroupPage;
@@ -66,32 +65,32 @@ public class GroupController {
   }
 
   @GetMapping("/{groupId}/students")
-  public ResponseEntity<List<User>> listStudentsForGroup(@PathVariable UUID groupId) {
+  public List<User> listStudentsForGroup(@PathVariable UUID groupId) {
     var body =
         studentGroupHistoryService.listCurrentStudents(groupId).stream()
             .map(this::toUserResponse)
             .toList();
-    return ResponseEntity.ok(body);
+    return body;
   }
 
   @PostMapping("/{groupId}/students/{studentId}")
-  public ResponseEntity<Void> enrollStudent(
+  @ResponseStatus(HttpStatus.CREATED)
+  public void enrollStudent(
       @PathVariable UUID groupId,
       @PathVariable UUID studentId,
       @RequestParam(required = false) LocalDate startDate) {
     studentGroupHistoryService.enroll(
         studentId, groupId, startDate != null ? startDate : LocalDate.now());
-    return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 
   @DeleteMapping("/{groupId}/students/{studentId}")
-  public ResponseEntity<Void> unenrollStudent(
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void unenrollStudent(
       @PathVariable UUID groupId,
       @PathVariable UUID studentId,
       @RequestParam(required = false) LocalDate endDate) {
     studentGroupHistoryService.unenroll(
         groupId, studentId, endDate != null ? endDate : LocalDate.now());
-    return ResponseEntity.noContent().build();
   }
 
   private User toUserResponse(JUser u) {
