@@ -5,6 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import school.hei.demo.enums.UserRole;
 import school.hei.demo.repository.UserRepository;
 import school.hei.demo.service.PromotionExcelService;
 
@@ -17,7 +18,7 @@ public class PromotionViewController {
 
   @GetMapping("/web/promotions")
   public String listPromotions(Model model) {
-    model.addAttribute("years", userRepository.findDistinctStudentEntryYears());
+    model.addAttribute("years", userRepository.findDistinctStudentEntryYears(UserRole.STUDENT));
     return "promotions";
   }
 
