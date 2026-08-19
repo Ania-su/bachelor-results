@@ -61,4 +61,48 @@ public class PromotionExcelService {
     String downloadUrl = bucketComponent.presign(bucketKey, Duration.ofMinutes(10)).toString();
     return PromotionDownloadResponse.builder().downloadUrl(downloadUrl).build();
   }
+
+  @SneakyThrows
+  public File generateGraduatesFile(int academicYear) {
+
+    List<GraduateResponse> graduates = promotionService.listGraduates(academicYear);
+
+    File file = createTempFile("graduates-" + academicYear + "-", ".xlsx");
+
+    try (Workbook workbook = new XSSFWorkbook()) {
+
+      Sheet sheet = workbook.createSheet("Diplomes " + academicYear);
+
+      Row header = sheet.createRow(0);
+
+      header.createCell(0).setCellValue("Rang");
+      header.createCell(1).setCellValue("Référence");
+      header.createCell(2).setCellValue("Prénom");
+      header.createCell(3).setCellValue("Nom");
+      header.createCell(4).setCellValue("Moyenne générale");
+
+      int rowIndex = 1;
+
+      for (GraduateResponse graduate : graduates) {
+
+        Row row = sheet.createRow(rowIndex++);
+
+        row.createCell(0).setCellValue(graduate.getRank());
+        row.createCell(1).setCellValue(graduate.getReference());
+        row.createCell(2).setCellValue(graduate.getFirstName());
+        row.createCell(3).setCellValue(graduate.getLastName());
+        row.createCell(4).setCellValue(graduate.getAverage().doubleValue());
+      }
+
+      for (int i = 0; i < 5; i++) {
+        sheet.autoSizeColumn(i);
+      }
+
+      try (FileOutputStream out = new FileOutputStream(file)) {
+        workbook.write(out);
+      }
+    }
+
+    return file;
+  }
 }
