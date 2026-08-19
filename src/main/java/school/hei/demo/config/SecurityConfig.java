@@ -32,7 +32,7 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/web/login")
                     .permitAll()
-                    .requestMatchers("/css/**")
+                    .requestMatchers("/assets/**")
                     .permitAll()
                     .requestMatchers("/web/promotions/**")
                     .hasAnyRole("ADMIN", "TEACHER", "STUDENT")
