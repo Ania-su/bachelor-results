@@ -1,17 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
 <head>
     <meta charset="UTF-8">
     <title>Promotions HEI</title>
-    <style>
-        body { font-family: sans-serif; margin: 40px; }
-        table { border-collapse: collapse; width: 100%; max-width: 500px; }
-        th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
-        a.button {
-            display: inline-block; padding: 4px 10px; text-decoration: none;
-            border: 1px solid #333; border-radius: 4px; color: #333;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/assets/promotions.css}">
 </head>
 <body>
 
@@ -29,15 +21,16 @@
         <td th:text="${year}">2024</td>
         <td>
             <a class="button"
-               th:href="@{/web/promotions/{year}/download(year=${year})}">
-                Télécharger la liste (Excel)
+               th:href="@{/web/promotions/{year}/download(year=${year})}"
+                download >
+                Télécharger la liste
             </a>
         </td>
     </tr>
     </tbody>
 </table>
 
-<p th:if="${#lists.isEmpty(years)}">Aucune promotion trouvée.</p>
+<p class="empty" th:if="${#lists.isEmpty(years)}">Aucune promotion trouvée.</p>
 
 </body>
 </html>
