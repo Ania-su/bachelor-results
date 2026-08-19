@@ -30,6 +30,12 @@ public class SecurityConfig {
                 authorize
                     .requestMatchers("/auth/login")
                     .permitAll()
+                    .requestMatchers("/web/login")
+                    .permitAll()
+                    .requestMatchers("/css/**")
+                    .permitAll()
+                    .requestMatchers("/web/promotions/**")
+                    .hasAnyRole("ADMIN", "TEACHER", "STUDENT")
                     .requestMatchers(HttpMethod.GET, "/users")
                     .hasAnyRole("ADMIN", "TEACHER")
                     .requestMatchers(HttpMethod.GET, "/users/*")
