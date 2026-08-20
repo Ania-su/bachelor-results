@@ -6,7 +6,6 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import school.hei.demo.enums.CodeType;
 import school.hei.demo.repository.model.JCourseSpecialty;
 
 public interface CourseSpecialtyRepository extends JpaRepository<JCourseSpecialty, UUID> {
@@ -17,10 +16,24 @@ public interface CourseSpecialtyRepository extends JpaRepository<JCourseSpecialt
 
   @Query(
       """
-      SELECT DISTINCT cs.course.id FROM JCourseSpecialty cs
-      WHERE cs.specialty.id = :specialtyId
-         OR cs.specialty.code = :noneCode
+      SELECT DISTINCT ca.course.id
+      FROM JCourseAssignment ca
+      JOIN JStudentGroupHistory sgh ON sgh.group.id = ca.group.id
+      WHERE sgh.student.id = :studentId
+        AND (
+            NOT EXISTS (
+                SELECT 1
+                FROM JCourseSpecialty cs
+                WHERE cs.course.id = ca.course.id
+            )
+            OR EXISTS (
+                SELECT 1
+                FROM JCourseSpecialty cs
+                WHERE cs.course.id = ca.course.id
+                  AND cs.specialty.id = :specialtyId
+            )
+        )
       """)
   Set<UUID> findRequiredCourseIds(
-      @Param("specialtyId") UUID specialtyId, @Param("noneCode") CodeType noneCode);
+      @Param("studentId") UUID studentId, @Param("specialtyId") UUID specialtyId);
 }
