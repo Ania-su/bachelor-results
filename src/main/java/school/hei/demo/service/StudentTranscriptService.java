@@ -24,7 +24,6 @@ import school.hei.demo.endpoint.event.EventProducer;
 import school.hei.demo.endpoint.event.model.SendEmailRequested;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.file.bucket.BucketComponent;
-import school.hei.demo.repository.CourseRepository;
 import school.hei.demo.repository.GradeRepository;
 import school.hei.demo.repository.UserRepository;
 
@@ -32,7 +31,6 @@ import school.hei.demo.repository.UserRepository;
 @AllArgsConstructor
 public class StudentTranscriptService {
   private final UserRepository userRepository;
-  private final CourseRepository courseRepository;
   private final GradeRepository gradeRepository;
   private final UserMapper userMapper;
   private final StudentCourseGradeService studentCourseGradeService;
@@ -49,7 +47,7 @@ public class StudentTranscriptService {
             .orElseThrow(() -> new NotFoundException("Student " + studentId + " not found"));
 
     var courseData =
-        courseRepository.findAllForTranscript(user.getSpecialtyId()).stream()
+        gradeRepository.findCoursesWithGrades(studentId).stream()
             .map(
                 course -> {
                   var courseGrade = studentCourseGradeService.get(course.getId(), studentId);

@@ -1,7 +1,9 @@
 package school.hei.demo.service;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -16,9 +18,13 @@ import school.hei.demo.domain.mappers.ExamMapper;
 import school.hei.demo.domain.mappers.UserMapper;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.repository.CourseRepository;
+import school.hei.demo.repository.ExamGroupRepository;
 import school.hei.demo.repository.ExamRepository;
 import school.hei.demo.repository.GradeRepository;
+import school.hei.demo.repository.StudentGroupHistoryRepository;
 import school.hei.demo.repository.UserRepository;
+import school.hei.demo.repository.model.JExam;
+import school.hei.demo.repository.model.JExamGroup;
 
 @Service
 @AllArgsConstructor
@@ -27,6 +33,8 @@ public class StudentCourseGradeService {
   private final CourseRepository courseRepository;
   private final ExamRepository examRepository;
   private final GradeRepository gradeRepository;
+  private final ExamGroupRepository examGroupRepository;
+  private final StudentGroupHistoryRepository studentGroupHistoryRepository;
   private final UserMapper userMapper;
   private final CourseMapper courseMapper;
   private final ExamMapper examMapper;
@@ -44,7 +52,21 @@ public class StudentCourseGradeService {
             .map(courseMapper::toDomain)
             .orElseThrow(() -> new NotFoundException("Course " + courseId + " not found"));
 
-    var exams = examRepository.findAllByCourse_Id(courseId);
+    var courseExams = examRepository.findAllByCourse_Id(courseId);
+    var studentGroupIds =
+        studentGroupHistoryRepository.findAllByStudent_IdOrderByStartDateDesc(studentId).stream()
+            .map(history -> history.getGroup().getId())
+            .collect(Collectors.toSet());
+    var examIds = courseExams.stream().map(JExam::getId).collect(Collectors.toSet());
+    var examGroupsByExam =
+        examGroupRepository.findAllByExam_IdIn(examIds).stream()
+            .collect(Collectors.groupingBy(examGroup -> examGroup.getExam().getId()));
+
+    var exams =
+        courseExams.stream()
+            .filter(exam -> belongsToStudentGroup(exam, studentGroupIds, examGroupsByExam))
+            .toList();
+
     Map<UUID, BigDecimal> gradesByExamId =
         gradeRepository.findAllByStudent_IdAndExam_Course_Id(studentId, courseId).stream()
             .collect(Collectors.toMap(grade -> grade.getExam().getId(), grade -> grade.getValue()));
@@ -62,14 +84,21 @@ public class StudentCourseGradeService {
                         gradesByExamId.getOrDefault(exam.getId(), BigDecimal.ZERO).doubleValue()))
             .toList();
 
+    var gradedExams =
+        exams.stream().filter(exam -> gradesByExamId.containsKey(exam.getId())).toList();
+    var totalCoef =
+        gradedExams.stream().map(JExam::getCoef).reduce(BigDecimal.ZERO, BigDecimal::add);
     double average =
-        exams.stream()
-            .map(
-                exam ->
-                    exam.getCoef()
-                        .multiply(gradesByExamId.getOrDefault(exam.getId(), BigDecimal.ZERO)))
-            .reduce(BigDecimal.ZERO, BigDecimal::add)
-            .doubleValue();
+        totalCoef.signum() == 0
+            ? 0.0
+            : gradedExams.stream()
+                .map(
+                    exam ->
+                        exam.getCoef()
+                            .multiply(gradesByExamId.getOrDefault(exam.getId(), BigDecimal.ZERO)))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .divide(totalCoef, java.math.MathContext.DECIMAL64)
+                .doubleValue();
 
     return new StudentCourseGradeResponse(
         toResponse(user),
@@ -81,6 +110,13 @@ public class StudentCourseGradeService {
             course.getCredits()),
         examResponses,
         average);
+  }
+
+  private boolean belongsToStudentGroup(
+      JExam exam, Set<UUID> studentGroupIds, Map<UUID, List<JExamGroup>> examGroupsByExam) {
+    return examGroupsByExam.getOrDefault(exam.getId(), List.of()).stream()
+        .map(examGroup -> examGroup.getGroup().getId())
+        .anyMatch(studentGroupIds::contains);
   }
 
   private User toResponse(school.hei.demo.entity.User user) {
