@@ -24,6 +24,7 @@ tags:
   - name: Grades
   - name: Students
   - name: Promotions
+  - name: Web
 paths:
   /auth/login:
     post:
@@ -333,7 +334,7 @@ paths:
       tags: [Grades]
       summary: Get a student's weighted grade for a course
       operationId: getStudentCourseGrade
-      x-roles: [ADMIN, TEACHER, STUDENT]
+      x-roles: [ADMIN]
       security: [{ bearerAuth: [] }]
       responses:
         '200':
@@ -481,6 +482,41 @@ paths:
               schema:
                 type: array
                 items: { $ref: '#/components/schemas/User' }
+
+  /groups/{groupId}/students/{studentId}:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+      - $ref: '#/components/parameters/StudentId'
+    post:
+      tags: [Groups]
+      summary: Enroll a student into a group
+      operationId: enrollStudentInGroup
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: startDate
+          in: query
+          required: false
+          description: Enrollment start date (defaults to today)
+          schema: { type: string, format: date }
+      responses:
+        '201': { description: Student enrolled }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Groups]
+      summary: Unenroll a student from a group
+      operationId: unenrollStudentFromGroup
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: endDate
+          in: query
+          required: false
+          description: Unenrollment end date (defaults to today)
+          schema: { type: string, format: date }
+      responses:
+        '204': { description: Student unenrolled }
+        '404': { $ref: '#/components/responses/NotFound' }
 
   /courses/{courseId}/exams:
     parameters:
@@ -733,6 +769,25 @@ paths:
               schema: { $ref: '#/components/schemas/Grade' }
         '403': { $ref: '#/components/responses/Forbidden' }
 
+  /courses/{courseId}/exams/{examId}/grades/history:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+      - $ref: '#/components/parameters/ExamId'
+    get:
+      tags: [Grades]
+      summary: List grade history for an exam
+      operationId: listGradeHistory
+      x-roles: [ADMIN, TEACHER]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Grade history records
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/GradeHistory' }
+
   /me/transcript-email:
     get:
       tags: [Students]
@@ -751,7 +806,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
 
-  /student/{studentId}/transcript:
+  /students/{studentId}/transcript:
     get:
       tags: [Students]
       summary: Download a student's transcript
@@ -804,6 +859,94 @@ paths:
               schema:
                 type: array
                 items: { $ref: '#/components/schemas/Graduate' }
+
+  /promotions/{academicYear}/graduates/download:
+    parameters:
+      - $ref: '#/components/parameters/AcademicYear'
+    get:
+      tags: [Promotions]
+      summary: Download the graduates list for a promotion as an Excel file
+      operationId: downloadGraduates
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: A link to the generated Excel download
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PromotionDownload' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /web/login:
+    get:
+      tags: [Web]
+      summary: Render the login page
+      operationId: viewLogin
+      security: []
+      responses:
+        '200':
+          description: HTML login page
+          content:
+            text/html:
+              schema: { type: string }
+    post:
+      tags: [Web]
+      summary: Submit login credentials
+      operationId: submitLogin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+      responses:
+        '302':
+          description: Redirect to promotions page on success
+          headers:
+            Location:
+              schema: { type: string, format: uri }
+            Set-Cookie:
+              schema: { type: string }
+              description: Session cookie with JWT token
+
+  /web/promotions:
+    get:
+      tags: [Web]
+      summary: Render the promotions overview page
+      operationId: viewPromotions
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: HTML page listing promotions by academic year
+          content:
+            text/html:
+              schema: { type: string }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /web/promotions/{academicYear}/download:
+    parameters:
+      - $ref: '#/components/parameters/AcademicYear'
+    get:
+      tags: [Web]
+      summary: Redirect to the graduates Excel download
+      operationId: viewDownloadGraduates
+      x-roles: [ADMIN]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '302':
+          description: Temporary redirect to the generated Excel download URL
+          headers:
+            Location:
+              description: Presigned download URL
+              schema: { type: string, format: uri }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
 
 components:
   securitySchemes:
@@ -1128,6 +1271,11 @@ components:
         grades:
           type: array
           items: { $ref: '#/components/schemas/Grade' }
+    PromotionDownload:
+      type: object
+      required: [downloadUrl]
+      properties:
+        downloadUrl: { type: string, format: uri, description: Temporary AWS S3 URL }
     TranscriptDelivery:
       type: object
       required: [status]

@@ -38,7 +38,6 @@ import school.hei.demo.endpoint.event.model.SendEmailRequested;
 import school.hei.demo.enums.UserRole;
 import school.hei.demo.exception.NotFoundException;
 import school.hei.demo.file.bucket.BucketComponent;
-import school.hei.demo.repository.CourseRepository;
 import school.hei.demo.repository.GradeRepository;
 import school.hei.demo.repository.UserRepository;
 
@@ -65,7 +64,6 @@ class StudentTranscriptServiceTest {
         spy(
             new StudentTranscriptService(
                 mock(UserRepository.class),
-                mock(CourseRepository.class),
                 mock(GradeRepository.class),
                 mock(UserMapper.class),
                 mock(StudentCourseGradeService.class),
@@ -121,7 +119,6 @@ class StudentTranscriptServiceTest {
         spy(
             new StudentTranscriptService(
                 mock(UserRepository.class),
-                mock(CourseRepository.class),
                 mock(GradeRepository.class),
                 mock(UserMapper.class),
                 mock(StudentCourseGradeService.class),
@@ -154,7 +151,6 @@ class StudentTranscriptServiceTest {
         spy(
             new StudentTranscriptService(
                 mock(UserRepository.class),
-                mock(CourseRepository.class),
                 mock(GradeRepository.class),
                 mock(UserMapper.class),
                 mock(StudentCourseGradeService.class),

@@ -30,7 +30,7 @@ public class AuthService {
       throw new UnauthorizedException("Invalid password");
     }
 
-    school.hei.demo.entity.User domainUser = userMapper.toDomain(jUser);
+    var domainUser = userMapper.toDomain(jUser);
     User user =
         new User(
             domainUser.getId(),

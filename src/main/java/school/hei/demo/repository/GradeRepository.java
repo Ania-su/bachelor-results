@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import school.hei.demo.entity.CourseAverageResult;
+import school.hei.demo.repository.model.JCourse;
 import school.hei.demo.repository.model.JGrade;
 
 public interface GradeRepository extends JpaRepository<JGrade, UUID> {
@@ -21,6 +22,14 @@ public interface GradeRepository extends JpaRepository<JGrade, UUID> {
   List<JGrade> findAllByStudent_IdAndExam_Course_Id(UUID studentId, UUID courseId);
 
   long countByStudent_IdAndExam_Course_Id(UUID studentId, UUID courseId);
+
+  @Query(
+      """
+      SELECT DISTINCT g.exam.course
+      FROM JGrade g
+      WHERE g.student.id = :studentId
+      """)
+  List<JCourse> findCoursesWithGrades(@Param("studentId") UUID studentId);
 
   @Query(
       """
