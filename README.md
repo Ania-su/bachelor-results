@@ -47,7 +47,7 @@ Role-based school grading API (Spring Boot 3.2.2, Java 21, PostgreSQL). The Open
 │   │   │   ├── StudentCourseGradeController.java
 │   │   │   ├── GroupController.java / PromotionController.java / TranscriptController.java
 │   │   │   └── health/ (Ping, HealthDb, HealthBucket, HealthEvent, HealthEmail)
-│   │   ├── web/PromotionViewController.java  # Thymeleaf view, /web/promotions
+│   │   ├── web/LoginViewController.java + PromotionViewController.java  # Thymeleaf views
 │   │   └── event/ (EventProducer, EventConsumer, EventConf)
 │   ├── domain/
 │   │   ├── dto/request/  (LoginRequest, UserCreate/Update, CourseRequest, …)
@@ -74,7 +74,7 @@ Layering is strict: **Controller → Service (auth helpers + validator) → Repo
 
 ## 3. API contract
 
-`doc/api.yaml` is OpenAPI 3.1.0, served at `/api/v1` (local) / `https://api.example.com/v1` (prod). Every operation declares `x-roles` and `security: [{ bearerAuth: [] }]`. The file currently documents **27 paths** (including 2 web view paths `GET /web/promotions` and `GET /web/promotions/{academicYear}/download` returning `text/html` / `302`). Health endpoints (`/ping`, `/health/*`) are intentionally omitted.
+`doc/api.yaml` is OpenAPI 3.1.0, served at `/api/v1` (local) / `https://api.example.com/v1` (prod). Every operation declares `x-roles` and `security: [{ bearerAuth: [] }]`. The file currently documents **30 paths** (including 4 web view paths: `GET /web/login`, `POST /web/login`, `GET /web/promotions`, `GET /web/promotions/{academicYear}/download` returning `text/html` / `302`). Health endpoints (`/ping`, `/health/*`) are intentionally omitted.
 
 ## 4. How routes are protected
 
@@ -155,9 +155,9 @@ GET  /courses/{courseId}/assignments/{assignmentId}
 GET  /courses/{courseId}/student-grade/{student-id}
 ```
 
-Result: **13 resource controllers** instead of a few fat ones:
+Result: **14 resource controllers** instead of a few fat ones:
 
-* `AuthController: /auth`, `UserController: /users`, `SpecialtyController: /specialties`, `CourseController: /courses`, `CourseAssignmentController: /courses/{courseId}/assignments`, `ExamController: /courses/{courseId}/exams`, `ExamGroupController: /courses/{courseId}/exams/{examId}/groups`, `GradeController: /courses/{courseId}/exams/{examId}/grades`, `StudentCourseGradeController: /courses/{courseId}/student-grade`, `GroupController: /groups` (+ `/groups/{groupId}/students`), `PromotionController: /promotions`, `TranscriptController: /students/{id}/transcript + /me/transcript-email`, `PromotionViewController: /web/promotions`.
+* `AuthController: /auth`, `UserController: /users`, `SpecialtyController: /specialties`, `CourseController: /courses`, `CourseAssignmentController: /courses/{courseId}/assignments`, `ExamController: /courses/{courseId}/exams`, `ExamGroupController: /courses/{courseId}/exams/{examId}/groups`, `GradeController: /courses/{courseId}/exams/{examId}/grades`, `StudentCourseGradeController: /courses/{courseId}/student-grade`, `GroupController: /groups` (+ `/groups/{groupId}/students`), `PromotionController: /promotions`, `TranscriptController: /students/{id}/transcript + /me/transcript-email`, `LoginViewController: /web/login`, `PromotionViewController: /web/promotions`.
 
 Benefits:
 
@@ -195,15 +195,17 @@ Environment: `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATA
 | GET/POST | `/courses/{courseId}/exams/{examId}/groups` | `ExamGroupController.java` | `[ADMIN,TEACHER,STUDENT]` / `[ADMIN,TEACHER]` |
 | GET/DELETE | `/courses/{courseId}/exams/{examId}/groups/{examGroupId}` | `ExamGroupController.java` | `[ADMIN,TEACHER,STUDENT]` / `[ADMIN,TEACHER]` |
 | GET/POST | `/courses/{courseId}/exams/{examId}/grades` | `GradeController.java` | `[ADMIN,TEACHER,STUDENT]` / `[ADMIN,TEACHER]` |
+| GET | `/courses/{courseId}/exams/{examId}/grades/history` | `GradeController.java` | `[ADMIN,TEACHER]` |
 | GET/PATCH/DELETE | `/courses/{courseId}/exams/{examId}/grades/{gradeId}` | `GradeController.java` | `[ADMIN,TEACHER,STUDENT]` / `[ADMIN,TEACHER]` |
 | GET/POST/PATCH/DELETE | `/groups` / `/groups/{groupId}` | `GroupController.java` | `[ADMIN,TEACHER]` / `[ADMIN]` |
 | GET | `/groups/{groupId}/students` | `GroupController.java` | `[ADMIN,TEACHER]` |
 | POST/DELETE | `/groups/{groupId}/students/{studentId}` | `GroupController.java` | `[ADMIN]` |
 | GET | `/me/transcript-email` | `TranscriptController.java` | `[STUDENT]` |
-| GET | `/student/{studentId}/transcript` | `TranscriptController.java` | `[ADMIN]` |
+| GET | `/students/{studentId}/transcript` | `TranscriptController.java` | `[ADMIN]` |
 | GET | `/promotions` | `PromotionController.java` | `[ADMIN]` |
 | GET | `/promotions/{academicYear}/graduates` | `PromotionController.java` | `[ADMIN]` |
 | GET | `/promotions/{academicYear}/graduates/download` | `PromotionController.java` | `[ADMIN]` |
+| GET/POST | `/web/login` | `LoginViewController.java` | — (permitAll) |
 | GET | `/web/promotions` | `PromotionViewController.java` | `[ADMIN]` |
 | GET | `/web/promotions/{academicYear}/download` | `PromotionViewController.java` | `[ADMIN]` (302 redirect) |
 * Students on `GET /users/{userId}` and grades/exams are further restricted by the service helpers to their own data / specialty.
