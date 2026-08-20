@@ -11,6 +11,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,17 +23,20 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import school.hei.demo.domain.dto.request.GradeCreate;
 import school.hei.demo.domain.dto.request.GradeUpdate;
+import school.hei.demo.domain.dto.response.GradeHistoryResponse;
 import school.hei.demo.domain.dto.response.GradePage;
 import school.hei.demo.domain.dto.response.GradeResponse;
 import school.hei.demo.domain.dto.response.PageMetadata;
 import school.hei.demo.endpoint.rest.controller.GradeController;
 import school.hei.demo.exception.GlobalExceptionHandler;
 import school.hei.demo.exception.NotFoundException;
+import school.hei.demo.service.GradeHistoryService;
 import school.hei.demo.service.GradeService;
 
 @ExtendWith(MockitoExtension.class)
 class GradeControllerTest {
-  @Mock GradeService service;
+  @Mock GradeService gradeService;
+  @Mock GradeHistoryService gradeHistoryService;
   private MockMvc mockMvc;
   private ObjectMapper objectMapper;
   private final UUID courseId = UUID.randomUUID();
@@ -42,7 +47,7 @@ class GradeControllerTest {
   @BeforeEach
   void setUp() {
     mockMvc =
-        MockMvcBuilders.standaloneSetup(new GradeController(service))
+        MockMvcBuilders.standaloneSetup(new GradeController(gradeService, gradeHistoryService))
             .setControllerAdvice(new GlobalExceptionHandler())
             .build();
     objectMapper = new ObjectMapper().findAndRegisterModules();
@@ -57,12 +62,12 @@ class GradeControllerTest {
             .examId(examId)
             .value(BigDecimal.TEN)
             .build();
-    when(service.list(courseId, examId, studentId, 1, 10))
+    when(gradeService.list(courseId, examId, studentId, 1, 10))
         .thenReturn(new GradePage(java.util.List.of(response), new PageMetadata(1, 10, 1, 1)));
-    when(service.create(any(), any(), any())).thenReturn(response);
-    when(service.get(courseId, examId, gradeId)).thenReturn(response);
-    when(service.update(any(), any(), any(), any())).thenReturn(response);
-    when(service.delete(courseId, examId, gradeId)).thenReturn(response);
+    when(gradeService.create(any(), any(), any())).thenReturn(response);
+    when(gradeService.get(courseId, examId, gradeId)).thenReturn(response);
+    when(gradeService.update(any(), any(), any(), any())).thenReturn(response);
+    when(gradeService.delete(courseId, examId, gradeId)).thenReturn(response);
 
     mockMvc
         .perform(
@@ -99,8 +104,40 @@ class GradeControllerTest {
   }
 
   @Test
+  void shouldReturnGradeHistoryForExam() throws Exception {
+    var historyEntry =
+        new GradeHistoryResponse(
+            UUID.randomUUID(),
+            gradeId,
+            new BigDecimal("8.00"),
+            new BigDecimal("14.00"),
+            "Erreur de transcription",
+            UUID.randomUUID(),
+            Instant.parse("2026-08-18T10:00:00Z"));
+    when(gradeHistoryService.listForExam(examId)).thenReturn(List.of(historyEntry));
+
+    mockMvc
+        .perform(get("/courses/{courseId}/exams/{examId}/grades/history", courseId, examId))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].oldValue").value(8.00))
+        .andExpect(jsonPath("$[0].newValue").value(14.00))
+        .andExpect(jsonPath("$[0].reason").value("Erreur de transcription"));
+  }
+
+  @Test
+  void shouldReturnEmptyListWhenNoHistoryForExam() throws Exception {
+    when(gradeHistoryService.listForExam(examId)).thenReturn(List.of());
+
+    mockMvc
+        .perform(get("/courses/{courseId}/exams/{examId}/grades/history", courseId, examId))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$").isArray())
+        .andExpect(jsonPath("$").isEmpty());
+  }
+
+  @Test
   void shouldMapNotFoundTo404() throws Exception {
-    when(service.get(courseId, examId, gradeId)).thenThrow(new NotFoundException("missing"));
+    when(gradeService.get(courseId, examId, gradeId)).thenThrow(new NotFoundException("missing"));
     mockMvc
         .perform(
             get("/courses/{courseId}/exams/{examId}/grades/{gradeId}", courseId, examId, gradeId))
